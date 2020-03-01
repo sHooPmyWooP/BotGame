@@ -1,6 +1,6 @@
-<mxfile host="www.draw.io" modified="2020-03-01T11:44:46.727Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.122 Safari/537.36" etag="rqtFopoxSyR6rdPQFL6E" version="12.7.9" type="github">
+<mxfile host="www.draw.io" modified="2020-03-01T12:16:46.701Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.122 Safari/537.36" etag="N7dtDs9kafIdeL5o5lvY" version="12.7.9" type="github">
   <diagram name="Page-1" id="e7e014a7-5840-1c2e-5031-d8a46d1fe8dd">
-    <mxGraphModel dx="2185" dy="1462" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1169" pageHeight="826" background="#ffffff" math="0" shadow="0">
+    <mxGraphModel dx="2185" dy="1421" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1169" pageHeight="826" background="#ffffff" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -274,32 +274,35 @@
         </mxCell>
         <object label="Farming" id="P64U0R8fJc3eR1nAm_Cf-40">
           <mxCell style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" vertex="1" parent="1">
-            <mxGeometry x="-440" y="-240" width="250" height="106" as="geometry">
+            <mxGeometry x="530" y="-530" width="250" height="152" as="geometry">
               <mxRectangle x="425" y="120" width="100" height="26" as="alternateBounds" />
             </mxGeometry>
           </mxCell>
         </object>
-        <mxCell id="P64U0R8fJc3eR1nAm_Cf-42" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="P64U0R8fJc3eR1nAm_Cf-40">
-          <mxGeometry y="26" width="250" height="8" as="geometry" />
+        <mxCell id="P64U0R8fJc3eR1nAm_Cf-60" value="- Planet : Planet&#xa;- Bedingungen_xyz : int&#xa;- Koordinaten : Koordinaten [ ]" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="P64U0R8fJc3eR1nAm_Cf-40">
+          <mxGeometry y="26" width="250" height="52" as="geometry" />
         </mxCell>
-        <mxCell id="P64U0R8fJc3eR1nAm_Cf-43" value="+ getFarmingTargets(Planet) : Koordinaten [ ]&#xa;+ startFarm(Flotte) : bool" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="P64U0R8fJc3eR1nAm_Cf-40">
-          <mxGeometry y="34" width="250" height="72" as="geometry" />
+        <mxCell id="P64U0R8fJc3eR1nAm_Cf-42" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="P64U0R8fJc3eR1nAm_Cf-40">
+          <mxGeometry y="78" width="250" height="2" as="geometry" />
+        </mxCell>
+        <mxCell id="P64U0R8fJc3eR1nAm_Cf-43" value="+ getFarmingTargets(Planet) : Koordinaten [ ]&#xa;+ bewerteFarmingTarget(Koordinate) : &#xa;+ startFarm(Flotte) : bool" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="P64U0R8fJc3eR1nAm_Cf-40">
+          <mxGeometry y="80" width="250" height="72" as="geometry" />
         </mxCell>
         <object label="SpielerAccount" id="P64U0R8fJc3eR1nAm_Cf-48">
           <mxCell style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" vertex="1" parent="1">
-            <mxGeometry x="10" y="-240" width="250" height="190" as="geometry">
+            <mxGeometry x="10" y="-240" width="340" height="200" as="geometry">
               <mxRectangle x="425" y="120" width="100" height="26" as="alternateBounds" />
             </mxGeometry>
           </mxCell>
         </object>
-        <mxCell id="P64U0R8fJc3eR1nAm_Cf-49" value="- Name : str&#xa;- FlottenSlots : int&#xa;- Offiziere : str [ ]" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="P64U0R8fJc3eR1nAm_Cf-48">
-          <mxGeometry y="26" width="250" height="104" as="geometry" />
+        <mxCell id="P64U0R8fJc3eR1nAm_Cf-49" value="- Name : str&#xa;- FlottenSlots : int&#xa;- Offiziere : str [ ]&#xa;- isAktiv : bool" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="P64U0R8fJc3eR1nAm_Cf-48">
+          <mxGeometry y="26" width="340" height="104" as="geometry" />
         </mxCell>
         <mxCell id="P64U0R8fJc3eR1nAm_Cf-50" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="P64U0R8fJc3eR1nAm_Cf-48">
-          <mxGeometry y="130" width="250" height="8" as="geometry" />
+          <mxGeometry y="130" width="340" height="8" as="geometry" />
         </mxCell>
-        <mxCell id="P64U0R8fJc3eR1nAm_Cf-51" value="+ verschickeFlotte(Flotte, Koordinaten, &#xa;Mission ID)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="P64U0R8fJc3eR1nAm_Cf-48">
-          <mxGeometry y="138" width="250" height="52" as="geometry" />
+        <mxCell id="P64U0R8fJc3eR1nAm_Cf-51" value="+ verschickeFlotte(Flotte, Koordinaten, &#xa;Mission ID)&#xa;+ startFarming(BedingungenZiel, KoordinatenRange &#xa;[Start:Ende], PlanetStart" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="P64U0R8fJc3eR1nAm_Cf-48">
+          <mxGeometry y="138" width="340" height="62" as="geometry" />
         </mxCell>
         <mxCell id="P64U0R8fJc3eR1nAm_Cf-44" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="P64U0R8fJc3eR1nAm_Cf-49" target="jIY0R9k1WC5agwst_tWj-105">
           <mxGeometry relative="1" as="geometry">
@@ -329,6 +332,26 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="P64U0R8fJc3eR1nAm_Cf-54" value="1" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=#ffffff;" vertex="1" connectable="0" parent="P64U0R8fJc3eR1nAm_Cf-52">
+          <mxGeometry x="-0.8769" y="2" relative="1" as="geometry">
+            <mxPoint x="2" y="-12.91" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="P64U0R8fJc3eR1nAm_Cf-56" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=block;startFill=1;endArrow=block;endFill=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="P64U0R8fJc3eR1nAm_Cf-49" target="P64U0R8fJc3eR1nAm_Cf-43">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="135" y="-232.08999999999992" as="sourcePoint" />
+            <mxPoint x="122.5" y="-299.48" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="440" y="-162" />
+              <mxPoint x="440" y="-414" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="P64U0R8fJc3eR1nAm_Cf-57" value="1" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=#ffffff;" vertex="1" connectable="0" parent="P64U0R8fJc3eR1nAm_Cf-56">
+          <mxGeometry x="0.7795" y="1" relative="1" as="geometry">
+            <mxPoint x="1" y="10.420000000000002" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="P64U0R8fJc3eR1nAm_Cf-58" value="1" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=#ffffff;" vertex="1" connectable="0" parent="P64U0R8fJc3eR1nAm_Cf-56">
           <mxGeometry x="-0.8769" y="2" relative="1" as="geometry">
             <mxPoint x="2" y="-12.91" as="offset" />
           </mxGeometry>
