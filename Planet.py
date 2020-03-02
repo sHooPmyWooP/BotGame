@@ -1,26 +1,9 @@
-from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
 from bs4 import BeautifulSoup
-import os
 import re
+from Resources import Resources
+from Account import *
 
 target = "https://lobby.ogame.gameforge.com/de_DE/"
-
-def newChromeBrowser(headless=True, downloadPath=None):
-    """ Helper function that creates a new Selenium browser """
-    options = webdriver.ChromeOptions()
-    if headless:
-        options.add_argument('headless')
-    if downloadPath is not None:
-        prefs = {}
-        if not os.path.exists(downloadPath):
-            os.makedirs(downloadPath)
-        prefs["profile.default_content_settings.popups"] = 0
-        prefs["download.default_directory"] = downloadPath
-        options.add_experimental_option("prefs", prefs)
-    browser = webdriver.Chrome(options=options, executable_path=pathChromedriver)
-    return browser
-
 
 def getSoup(driver):
     # Get current Soup
@@ -69,17 +52,20 @@ class Planet:
         self.tempMin = min(temps)
 
         # Resources
-        # Todo: Resourcen in Klasse Resource
         metal = soup.find("span", {"id": "resources_metal"}).text
         crystal = soup.find("span", {"id": "resources_crystal"}).text
         deuterium = soup.find("span", {"id": "resources_deuterium"}).text
+        self.resources = Resources(metal,crystal,deuterium)
         print("metal:", metal, "\ncrystal:", crystal, "\ndeut:", deuterium)
         # Todo : Lagerkapazität - ggf. Produktion
 
-p1 = Planet("https://s167-de.ogame.gameforge.com/game/index.php?page=ingame&component=overview", driver)
 
-soup = getSoup(driver)
-soup = soup.find("ul", {"id": "resources"})
-soup_metal = soup.find("li", {"id": "metal_box"})
-table = soup_metal.findChildren(['th', 'tr'])
-print(soup_metal)
+a1 = Account("david-achilles@hotmail.de","OGame!4friends")
+a1.login()
+p1 = Planet("https://s167-de.ogame.gameforge.com/game/index.php?page=ingame&component=overview", driver)
+#
+# soup = getSoup(driver)
+# soup = soup.find("ul", {"id": "resources"})
+# soup_metal = soup.find("li", {"id": "metal_box"})
+# table = soup_metal.findChildren(['th', 'tr'])
+# print(soup_metal)
