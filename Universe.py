@@ -1,10 +1,22 @@
 import json
+import requests
+
+language = "de" # todo: move to config or make dynamic
 
 class Universe:
     def __init__(self, json_uni):
         self.json_uni = json_uni
-        pass
+        self.uni_number = json_uni["server"]["number"]
+        self.player_name = json_uni["name"]
+        self.settings = {}
+        server_api_request = requests.get("https://lobby.ogame.gameforge.com/api/servers")
+        server_api_json = server_api_request.json()
+        for server in server_api_json:
+            if self.uni_number == server["number"]:
+                self.name = server["name"]
+                self.language = server["language"]
+                for key in server["settings"]:
+                    self.settings[key] = server["settings"][key]
 
 if __name__ == "__main__":
-    json_acc = str({'server': {'language': 'de', 'number': 167}, 'id': 107550, 'gameAccountId': 107550, 'name': 'Mogul Spacewalk', 'lastPlayed': '2020-03-02T13:22:29+0100', 'lastLogin': '2020-03-02T12:22:29+0000', 'blocked': False, 'bannedUntil': None, 'bannedReason': None, 'details': [{'type': 'literal', 'title': 'myAccounts.rank', 'value': '2709'}, {'type': 'localized', 'title': 'myAccounts.status', 'value': 'playerStatus.active'}], 'sitting': {'shared': False, 'endTime': None, 'cooldownTime': None}, 'trading': {'trading': False, 'cooldownTime': None}})
     u1 = Universe(json_acc)
