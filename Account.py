@@ -28,12 +28,15 @@ class Account:
         :param accPW:  str
         json_acc: JSON Return from Account API https://lobby.ogame.gameforge.com/api/users/me/accounts
         soup_accounts: str of soup from Universe selection page
+        login_uni: Universe (currently active)
         """
         self.accName = accName
         self.accPW = accPW
         self.json_acc = ""
         self.Universes = []
         self.soup_accounts = ""
+        self.login_uni = ""
+        self.driver = ""
 
     def login(self, uni_name):
         """
@@ -44,23 +47,23 @@ class Account:
         :return: True if successful, False on Error
         """
         try:
-            driver = self.newChromeBrowser(pathChromedriver=pathChromedriver)
-            driver.maximize_window()  # Selection of universe won't work if not fullscreen
-            driver.get("https://lobby.ogame.gameforge.com/de_DE/")  # todo auslagern in Config
-            btnEinloggenAuswahl = driver.find_element_by_xpath(
+            self.driver = self.newChromeBrowser(pathChromedriver=pathChromedriver)
+            self.driver.maximize_window()  # Selection of universe won't work if not fullscreen
+            self.driver.get("https://lobby.ogame.gameforge.com/de_DE/")  # todo auslagern in Config
+            btnEinloggenAuswahl = self.driver.find_element_by_xpath(
                 '//*[@id="loginRegisterTabs"]/ul/li[1]')  # Einloggen vs. Registrieren Top
             btnEinloggenAuswahl.click()
 
-            btnEinloggen = driver.find_element_by_xpath('// *[ @ id = "loginForm"] / p / button[1]')
-            email = driver.find_element_by_name("email")
-            password = driver.find_element_by_name("password")
+            btnEinloggen = self.driver.find_element_by_xpath('// *[ @ id = "loginForm"] / p / button[1]')
+            email = self.driver.find_element_by_name("email")
+            password = self.driver.find_element_by_name("password")
 
             email.send_keys(self.accName)
             password.send_keys(self.accPW)
             btnEinloggen.click()  # login cookie is now set
             time.sleep(1)
 
-            if self.create_universes_from_account_api(driver):
+            if self.create_universes_from_account_api(self.driver):
                 print("Universes created.")
             else:
                 print("No active Universe identified after Login.")
@@ -69,27 +72,27 @@ class Account:
             # Universe to login to
             for uni in self.Universes:
                 if uni.name == uni_name:
-                    login_uni = uni
+                    self.login_uni = uni
                     break
 
             # Continue to Login - select Universe
-            driver.get("https://lobby.ogame.gameforge.com/de_DE/accounts")  # Universe-Overview
+            self.driver.get("https://lobby.ogame.gameforge.com/de_DE/accounts")  # Universe-Overview
             time.sleep(1)
 
-            self.soup_accounts = getSoup(driver)
+            self.soup_accounts = getSoup(self.driver)
             accounts_table = self.soup_accounts.find("div", {"class": "rt-table"})
             uni_pos = 1
             for row in accounts_table.findAll("div", {"class": 'server-name-cell'}):
-                if row.text == login_uni.name:
+                if row.text == self.login_uni.name:
                     break
                 else:
                     uni_pos += 1
 
-            btnLogin = driver.find_element_by_xpath(f'//*[@id="accountlist"]/div/div[1]/div[2]/div[{uni_pos}]/div/div[11]/button/span')
+            btnLogin = self.driver.find_element_by_xpath(f'//*[@id="accountlist"]/div/div[1]/div[2]/div[{uni_pos}]/div/div[11]/button/span')
             btnLogin.click()
 
             print(
-                f"Successful Login [{self.json_acc[uni_pos]['name']}] in Universe [{self.json_acc[uni_pos]['server']['number']}]")
+                f"Successful Login [{self.accName}] in Universe [{self.login_uni.name}]")
             return True
         except Exception as e:
             print("Login failed.", e)
@@ -123,6 +126,9 @@ class Account:
             options.add_experimental_option("detach", True)
         browser = webdriver.Chrome(options=options, executable_path=pathChromedriver)
         return browser
+
+    def getDriver(self):
+        return self.driver
 
 
 if __name__ == "__main__":

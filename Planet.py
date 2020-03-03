@@ -60,9 +60,11 @@ class Planet:
         # Todo : Lagerkapazität - ggf. Produktion
 
 
-a1 = Account("david-achilles@hotmail.de","OGame!4friends")
-a1.login()
-p1 = Planet("https://s167-de.ogame.gameforge.com/game/index.php?page=ingame&component=overview", driver)
+if __name__ == "__main__":
+    a1 = Account("david-achilles@hotmail.de", "OGame!4friends")
+    a1.login("Octans")
+    #p1 = Planet("https://s167-de.ogame.gameforge.com/game/index.php?page=ingame&component=overview", a1.getDriver())
+
 #
 # soup = getSoup(driver)
 # soup = soup.find("ul", {"id": "resources"})
