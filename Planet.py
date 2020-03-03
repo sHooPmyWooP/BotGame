@@ -1,9 +1,10 @@
-from bs4 import BeautifulSoup
 import re
-from Resources import Resources
-from Account import *
 
-target = "https://lobby.ogame.gameforge.com/de_DE/"
+import jsonpickle
+
+from Account import *
+from Resources import Resources
+
 
 def getSoup(driver):
     # Get current Soup
@@ -12,16 +13,20 @@ def getSoup(driver):
 
 
 class Planet:
-    def __init__(self, link, driver):
-        self.link = link
+    def __init__(self, driver):
+        time.sleep(2)
+        #todo: Wenn Klasse Spieleraccount angelegt - mitgeben für uni Nr & Sprache
+        driver.get(f"https://s167-de.ogame.gameforge.com/game/index.php?page=ingame&component=overview")
+
+        self.link = driver.current_url
         # get Links
-        self.linkOverview = re.sub("component=\w*", "component=overview", link)
-        self.linkSupplies = re.sub("component=\w*", "component=supplies", link)
-        self.linkFacilities = re.sub("component=\w*", "component=facilities", link)
-        self.linkShipyard = re.sub("component=\w*", "component=shipyard", link)
-        self.linkDefenses = re.sub("component=\w*", "component=defenses", link)
-        self.linkFleet = re.sub("component=\w*", "component=fleetdispatch", link)
-        self.linkGalaxy = re.sub("component=\w*", "component=galaxy", link)
+        self.linkOverview = re.sub("component=\w*", "component=overview", self.link)
+        self.linkSupplies = re.sub("component=\w*", "component=supplies", self.link)
+        self.linkFacilities = re.sub("component=\w*", "component=facilities", self.link)
+        self.linkShipyard = re.sub("component=\w*", "component=shipyard", self.link)
+        self.linkDefenses = re.sub("component=\w*", "component=defenses", self.link)
+        self.linkFleet = re.sub("component=\w*", "component=fleetdispatch", self.link)
+        self.linkGalaxy = re.sub("component=\w*", "component=galaxy", self.link)
 
         #####
         # Overview
@@ -30,40 +35,61 @@ class Planet:
         soup = getSoup(driver)
 
         # ID
-        regexID = re.search("cp=\d*", str(soup.findAll("a", {"class": "planetlink"}))).group(0)
-        if regexID:
+        try:
+            regexID = re.search("cp=\d*", str(soup.findAll("a", {"class": "planetlink"}))).group(0)
+            regexID = regexID.replace("cp=","")
             self.id = regexID
+        except AttributeError as e:
+            print("Attribute ID not found.",e)
 
         # Fields
-        regexFields = re.search("\(\d*\/\d*\)", str(soup.findAll("a", {"class": "planetlink"}))).group(0)
-        regexFields = regexFields.replace("(", "").replace(")", "").split("/")
-        if regexFields:
-            self.fieldsMax = regexFields[1]
-            self.fieldsUsed = regexFields[0]
+        try:
+            regexFields = re.search("\(\d*\/\d*\)", str(soup.findAll("a", {"class": "planetlink"}))).group(0)
+            regexFields = regexFields.replace("(", "").replace(")", "").split("/")
+            if regexFields:
+                self.fieldsMax = regexFields[1]
+                self.fieldsUsed = regexFields[0]
+        except AttributeError as e:
+            print("Attribute Field not found.",e)
 
         # Temperature
-        regexTemperature = re.findall("\d* °", str(soup.findAll("a", {"class": "planetlink"})))
-        temps = []
-        for temp in regexTemperature:
-            temp = temp.replace("°", "")
-            temp = temp.strip()
-            temps.append(temp)
-        self.tempMax = max(temps)
-        self.tempMin = min(temps)
+        try:
+            regexTemperature = re.findall("\d* °", str(soup.findAll("a", {"class": "planetlink"})))
+            temps = []
+            for temp in regexTemperature:
+                temp = temp.replace("°", "")
+                temp = temp.strip()
+                temps.append(temp)
+            self.tempMax = max(temps)
+            self.tempMin = min(temps)
+        except AttributeError as e:
+            print("Attribute Temperature not set.",e)
 
         # Resources
-        metal = soup.find("span", {"id": "resources_metal"}).text
-        crystal = soup.find("span", {"id": "resources_crystal"}).text
-        deuterium = soup.find("span", {"id": "resources_deuterium"}).text
-        self.resources = Resources(metal,crystal,deuterium)
-        print("metal:", metal, "\ncrystal:", crystal, "\ndeut:", deuterium)
-        # Todo : Lagerkapazität - ggf. Produktion
+        try:
+            metal = soup.find("span", {"id": "resources_metal"}).text
+            crystal = soup.find("span", {"id": "resources_crystal"}).text
+            deuterium = soup.find("span", {"id": "resources_deuterium"}).text
+            self.resources = Resources(metal,crystal,deuterium)
+        except AttributeError as e:
+            print("Attribute Resources not found.",e)
 
+        # Supplies (Buildings)
+        try:
+            driver.get(self.linkSupplies)
+            soup = getSoup(driver)
+            for li in soup.find_all("ul",{"id":"producers"}):
+                for geb in li.find_all("li"):
+                    print("loop:", geb,geb['aria-label'],geb['data-technology'])
+        except:
+            print("Error while creating Buildings of planet.")
+
+        print("Created Planet:",jsonpickle.encode(self))
 
 if __name__ == "__main__":
     a1 = Account("david-achilles@hotmail.de", "OGame!4friends")
     a1.login("Octans")
-    #p1 = Planet("https://s167-de.ogame.gameforge.com/game/index.php?page=ingame&component=overview", a1.getDriver())
+    p1 = Planet(a1.getDriver())
 
 #
 # soup = getSoup(driver)

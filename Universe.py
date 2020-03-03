@@ -1,5 +1,6 @@
 import json
 import requests
+import jsonpickle
 
 language = "de" # todo: move to config or make dynamic
 
@@ -17,6 +18,7 @@ class Universe:
                 self.language = server["language"]
                 for key in server["settings"]:
                     self.settings[key] = server["settings"][key]
+        print("Created Universe:", jsonpickle.encode(self))
 
 if __name__ == "__main__":
     u1 = Universe(json_acc)

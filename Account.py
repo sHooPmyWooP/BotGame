@@ -1,12 +1,15 @@
 # Todo: Pfad in config verschieben - Config anlegen
+import json
+import os
+import time
+
 from bs4 import BeautifulSoup
 from selenium import webdriver
-import os
-import requests
-import time
-import json
+from selenium.common.exceptions import NoSuchElementException
+
 from Universe import Universe
 
+# https://s167-de.ogame.gameforge.com/game/index.php?page=componentOnly&component=eventList&ajax=1 - Pfad merken für Ereignisse
 pathChromedriver = os.path.dirname(os.path.realpath(__file__)) + r"/Resources/Driver/chromedriver.exe"
 
 
@@ -64,7 +67,7 @@ class Account:
             time.sleep(1)
 
             if self.create_universes_from_account_api(self.driver):
-                print("Universes created.")
+                print("All Universes created.")
             else:
                 print("No active Universe identified after Login.")
                 return False
@@ -88,12 +91,16 @@ class Account:
                 else:
                     uni_pos += 1
 
-            btnLogin = self.driver.find_element_by_xpath(f'//*[@id="accountlist"]/div/div[1]/div[2]/div[{uni_pos}]/div/div[11]/button/span')
+            btnLogin = self.driver.find_element_by_xpath(
+                f'//*[@id="accountlist"]/div/div[1]/div[2]/div[{uni_pos}]/div/div[11]/button/span')
             btnLogin.click()
 
             print(
                 f"Successful Login [{self.accName}] in Universe [{self.login_uni.name}]")
             return True
+        except NoSuchElementException as e:
+            print("Element not found.",e)
+            return False
         except Exception as e:
             print("Login failed.", e)
             return False
