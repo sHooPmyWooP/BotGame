@@ -44,10 +44,8 @@ class Account:
 
     def login(self, uni_name):
         """
-        todo: Select correct universe with uni_pos
         Login to certain universe, populate Account with Universe Objects
-        :param self:
-        :param uni_name:
+        :param uni_name: str name of universe
         :return: True if successful, False on Error
         """
         try:
