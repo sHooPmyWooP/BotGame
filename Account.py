@@ -38,8 +38,9 @@ class Account:
         self.json_acc = ""
         self.Universes = []
         self.soup_accounts = ""
-        self.login_uni = ""
-        self.driver = ""
+        self.login_uni = None
+        self.driver = None
+        self.overview_page = ""
 
     def login(self, uni_name):
         """
@@ -54,7 +55,7 @@ class Account:
             self.driver.maximize_window()  # Selection of universe won't work if not fullscreen
             self.driver.get("https://lobby.ogame.gameforge.com/de_DE/")  # todo auslagern in Config
             btnEinloggenAuswahl = self.driver.find_element_by_xpath(
-                '//*[@id="loginRegisterTabs"]/ul/li[1]')  # Einloggen vs. Registrieren Top
+                '//*[@id="loginRegisterTabs"]/ul/li[1]')  # Login vs. Registrieren Top
             btnEinloggenAuswahl.click()
 
             btnEinloggen = self.driver.find_element_by_xpath('// *[ @ id = "loginForm"] / p / button[1]')
@@ -66,7 +67,7 @@ class Account:
             btnEinloggen.click()  # login cookie is now set
             time.sleep(1)
 
-            if self.create_universes_from_account_api(self.driver):
+            if self.create_universes_from_account_api(self):
                 print("All Universes created.")
             else:
                 print("No active Universe identified after Login.")
@@ -95,6 +96,10 @@ class Account:
                 f'//*[@id="accountlist"]/div/div[1]/div[2]/div[{uni_pos}]/div/div[11]/button/span')
             btnLogin.click()
 
+            time.sleep(2)
+            if len(self.driver.window_handles[1])>1:
+                self.driver.switch_to.window(self.driver.window_handles[1]) # Assuming after Login new Tab at Index 1 if a new Tab gets created
+            self.overview_page = self.driver.current_url
             print(
                 f"Successful Login [{self.accName}] in Universe [{self.login_uni.name}]")
             return True
@@ -103,20 +108,31 @@ class Account:
             return False
         except Exception as e:
             print("Login failed.", e)
+            self.driver.close()
             return False
 
     def create_universes_from_account_api(self, driver):
         # Account Basedata - creation of Universe
         # todo: Maybe solve per request? login problematic
         # request-account details unter https://lobby.ogame.gameforge.com/api/users/me/accounts
-        driver.get("https://lobby.ogame.gameforge.com/api/users/me/accounts")
-        accInfo = getSoup(driver).text
+        self.driver.get("https://lobby.ogame.gameforge.com/api/users/me/accounts")
+        accInfo = getSoup(self.driver).text
         self.json_acc = json.loads(accInfo)
-        if (self.json_acc):
+        if self.json_acc:
             for uni in self.json_acc:
-                self.Universes.append(Universe(uni))
+                self.Universes.append(Universe(self,uni))
             return True
         return False
+
+    def account_init(self):
+        # todo: Planeten aus Overview herauslesen und initialisieren. Methode in Player_Account verschieben wenn es die Klasse gibt
+        driver = self.driver
+        driver.get(self.overview_page)
+        #print(self.overview_page)
+        time.sleep(1)
+        soup = getSoup(driver)
+        print(soup)
+
 
     @staticmethod
     def newChromeBrowser(pathChromedriver, headless=False, detach=True):
@@ -141,5 +157,6 @@ class Account:
 if __name__ == "__main__":
     a1 = Account("david-achilles@hotmail.de", "OGame!4friends")
     a1.login("Octans")
+    a1.account_init()
 
     print("Done...")
