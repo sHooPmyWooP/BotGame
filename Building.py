@@ -1,9 +1,10 @@
 class Building:
 
-    def __init__(self, name, id, level, planet):
+    def __init__(self, name, wfid, level, building_type, planet):
         self.name = name
-        self.id = id
+        self.id = wfid
         self.level = level
+        self.type = building_type
         self.planet = planet
 
     def upgrade(self):

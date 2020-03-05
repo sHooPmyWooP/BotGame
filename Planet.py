@@ -4,7 +4,9 @@ import re
 
 from Account import *
 from Resources import Resources
-import Defense, Building, Ship
+from Defense import Defense
+from Building import Building
+from Ship import Ship
 
 
 def getSoup(driver):
@@ -91,10 +93,9 @@ class Planet:
             soup = getSoup(driver)
             for li in soup.find_all("ul", {"id": "producers"}):
                 for building in li.find_all("li"):
-                    self.buildings[building['aria-label']] = {"id": building['data-technology'], "level": building.text, "type": "supplies"}
-                    # print("loop:", building['aria-label'], building['data-technology'], building.text)
-                    # todo: Creation of Building Objects from building
-
+                    self.buildings[building['aria-label']] = Building(building['aria-label'],
+                                                                      building['data-technology'],
+                                                                      building.text, "supplies", self)
         except:
             print("Error while creating Buildings of planet.")
 
@@ -104,10 +105,8 @@ class Planet:
             soup = getSoup(driver)
             soupFacility = soup.find("div", {"id": "technologies"})
             for facility in soupFacility.find_all("li", {"class": "technology"}):
-                self.buildings[facility['aria-label']] = {"id": facility['data-technology'], "level": facility.text,
-                                                          "type": "facilities"}
-                #print(facility['aria-label'], facility['data-technology'], facility.text)
-                # todo: Creation of Facility Objects from facility
+                self.buildings[facility['aria-label']] = Building(facility['aria-label'], facility['data-technology'],
+                                                                  facility.text, "facilities", self)
         except Exception:
             print("Error while creating Facilities of planet.")
 
@@ -117,7 +116,8 @@ class Planet:
             soup = getSoup(driver)
             soupShipyard = soup.find("div", {"id": "technologies"})
             for ship in soupShipyard.find_all("li", {"class": "technology"}):
-                self.ships[ship['aria-label']] = {"id": ship['data-technology'], "count": ship.text}
+                self.ships[ship['aria-label']] = Ship(ship['aria-label'], ship['data-technology'],
+                                                      ship.text, self)
         except Exception:
             print("Error while creating Shipyard of planet.")
 
@@ -127,14 +127,11 @@ class Planet:
             soup = getSoup(driver)
             soupDefenses = soup.find("div", {"id": "technologies"})
             for defense in soupDefenses.find_all("li", {"class": "technology"}):
-                self.defenses[defense['aria-label']] = Defense(defense['aria-label'], defense['data-technology'], defense.text, self)
-                # print(defense['aria-label'], defense['data-technology'], defense.text)  # todo:create defense Objects
+                self.defenses[defense['aria-label']] = Defense(defense['aria-label'], defense['data-technology'],
+                                                               defense.text, self)
         except Exception:
             print("Error while creating Shipyard of planet.")
 
-        print(self.buildings)
-        print(self.ships)
-        print(self.defenses)
         # print("Created Planet:", jsonpickle.encode(self))
 
 
@@ -143,9 +140,3 @@ if __name__ == "__main__":
     a1.login("Octans")
     p1 = Planet(a1)
     a1.getDriver().close()
-#
-# soup = getSoup(driver)
-# soup = soup.find("ul", {"id": "resources"})
-# soup_metal = soup.find("li", {"id": "metal_box"})
-# table = soup_metal.findChildren(['th', 'tr'])
-# print(soup_metal)
