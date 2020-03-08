@@ -1,18 +1,13 @@
 import re
 
 # import jsonpickle
+import jsonpickle
 
 from Account import *
 from Resources import Resources
 from Defense import Defense
 from Building import Building
 from Ship import Ship
-
-
-def getSoup(driver):
-    # Get current Soup
-    html = driver.page_source
-    return BeautifulSoup(html, features="html.parser")
 
 
 class Planet:
@@ -40,7 +35,7 @@ class Planet:
         # Overview
         #####
         driver.get(self.linkOverview)
-        soup = getSoup(driver)
+        soup = acc.getSoup()
 
         # Planet Name & Coordinate
         self.name = soup.find("span", {"id": "planetNameHeader"}).text.strip()  # strip due to spaces in html text
@@ -90,7 +85,7 @@ class Planet:
         # Supplies (Buildings)
         try:
             driver.get(self.linkSupplies)
-            soup = getSoup(driver)
+            soup = acc.getSoup()
             for li in soup.find_all("ul", {"id": "producers"}):
                 for building in li.find_all("li"):
                     self.buildings[building['aria-label']] = Building(building['aria-label'],
@@ -102,7 +97,7 @@ class Planet:
         # Facilities
         try:
             driver.get(self.linkFacilities)
-            soup = getSoup(driver)
+            soup = acc.getSoup()
             soupFacility = soup.find("div", {"id": "technologies"})
             for facility in soupFacility.find_all("li", {"class": "technology"}):
                 self.buildings[facility['aria-label']] = Building(facility['aria-label'], facility['data-technology'],
@@ -113,7 +108,7 @@ class Planet:
         # Shipyard
         try:
             driver.get(self.linkShipyard)
-            soup = getSoup(driver)
+            soup = acc.getSoup()
             soupShipyard = soup.find("div", {"id": "technologies"})
             for ship in soupShipyard.find_all("li", {"class": "technology"}):
                 self.ships[ship['aria-label']] = Ship(ship['aria-label'], ship['data-technology'],
@@ -124,7 +119,7 @@ class Planet:
         # Defense
         try:
             driver.get(self.linkDefenses)
-            soup = getSoup(driver)
+            soup = acc.getSoup()
             soupDefenses = soup.find("div", {"id": "technologies"})
             for defense in soupDefenses.find_all("li", {"class": "technology"}):
                 self.defenses[defense['aria-label']] = Defense(defense['aria-label'], defense['data-technology'],
@@ -134,9 +129,25 @@ class Planet:
 
         # print("Created Planet:", jsonpickle.encode(self))
 
+    def get_next_building(self):
+        with open(file=r"Resources\BuildOrders\BO_Start", mode="r") as f:
+            next(f)
+            for line in f:
+                line = line.split(";")
+                line[0] = line[0].strip()
+                line[1] = int(line[1].strip())
+                if self.buildings[line[0]].level < line[1]:
+                    self.buildings[line[0]].upgrade()
+                    return True
+        print("no upgrade")
+        return False
+
 
 if __name__ == "__main__":
     a1 = Account("david-achilles@hotmail.de", "OGame!4friends")
     a1.login("Octans")
     p1 = Planet(a1)
-    a1.getDriver().close()
+    p1.get_next_building()
+    # for building in p1.buildings:
+    #     print(building.name, building.level)
+    # a1.getDriver().close()

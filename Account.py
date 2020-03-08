@@ -2,6 +2,7 @@
 import json
 import os
 import time
+import traceback
 
 from bs4 import BeautifulSoup
 from selenium import webdriver
@@ -14,11 +15,6 @@ pathChromedriver = os.path.dirname(os.path.realpath(__file__)) + r"/Resources/Dr
 
 
 # server-api = https://lobby.ogame.gameforge.com/api/servers
-
-def getSoup(driver):
-    # Get current Soup
-    html = driver.page_source
-    return BeautifulSoup(html, features="html.parser")
 
 
 class Account:
@@ -81,7 +77,7 @@ class Account:
             self.driver.get("https://lobby.ogame.gameforge.com/de_DE/accounts")  # Universe-Overview
             time.sleep(1)
 
-            self.soup_accounts = getSoup(self.driver)
+            self.soup_accounts = self.getSoup()
             accounts_table = self.soup_accounts.find("div", {"class": "rt-table"})
             uni_pos = 1
             for row in accounts_table.findAll("div", {"class": 'server-name-cell'}):
@@ -96,13 +92,14 @@ class Account:
 
             time.sleep(2)
             if len(self.driver.window_handles[1])>1:
-                self.driver.switch_to.window(self.driver.window_handles[1]) # Assuming after Login new Tab at Index 1 if a new Tab gets created
+                self.driver.switch_to.window(self.driver.window_handles[1]) # Assuming after Login new Tab at Index 1
+                # if a new Tab gets created
             self.overview_page = self.driver.current_url
             print(
                 f"Successful Login [{self.accName}] in Universe [{self.login_uni.name}]")
             return True
         except NoSuchElementException as e:
-            print("Element not found.",e)
+            print("Element not found.",e, traceback.format_exc())
             return False
         except Exception as e:
             print("Login failed.", e)
@@ -114,7 +111,7 @@ class Account:
         # todo: Maybe solve per request? login problematic
         # request-account details unter https://lobby.ogame.gameforge.com/api/users/me/accounts
         self.driver.get("https://lobby.ogame.gameforge.com/api/users/me/accounts")
-        accInfo = getSoup(self.driver).text
+        accInfo = self.getSoup().text
         self.json_acc = json.loads(accInfo)
         if self.json_acc:
             for uni in self.json_acc:
@@ -128,7 +125,7 @@ class Account:
         driver.get(self.overview_page)
         #print(self.overview_page)
         time.sleep(1)
-        soup = getSoup(driver)
+        soup = self.getSoup()
         print(soup)
 
 
@@ -151,10 +148,15 @@ class Account:
     def getDriver(self):
         return self.driver
 
+    def getSoup(self):
+        # Get current Soup
+        html = self.driver.page_source
+        return BeautifulSoup(html, features="html.parser")
+
 
 if __name__ == "__main__":
     a1 = Account("david-achilles@hotmail.de", "OGame!4friends")
     a1.login("Octans")
-    a1.account_init()
+    # a1.account_init()
 
     print("Done...")

@@ -1,13 +1,18 @@
+import jsonpickle
+
+
 class PlayerAccount:
-    def __init__(self, universe, json_uni):
-        self.uni_number = json_uni["server"]["number"]
-        self.player_name = json_uni["name"]
+    def __init__(self, universe):
+        self.uni_number = universe.json_uni["server"]["number"]
+        self.player_name = universe.json_uni["name"]
         self.universe = universe
+        self.planets = []
         self.fleet_slots = 0
         self.is_active = False
-        self.officer = [] # todo: naming anpassen (?) - eventuell nicht als liste
+        self.officer = []  # todo: naming anpassen (?) - eventuell nicht als liste
+        # print("Created PlayerAccount:", jsonpickle.encode(self))
 
-    def send_fleet(self,fleet,coordinate,mission_id):
+    def send_fleet(self, fleet, coordinate, mission_id):
         """
         todo: implement
         send fleet to attack or spy on target

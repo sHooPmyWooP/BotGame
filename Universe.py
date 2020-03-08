@@ -1,6 +1,6 @@
 import json
 import requests
-# import jsonpickle
+import jsonpickle
 from PlayerAccount import PlayerAccount
 from serverAPI import server_api
 
@@ -11,17 +11,17 @@ class Universe:
     def __init__(self, acc, json_uni):
         self.acc = acc
         self.json_uni = json_uni
-        self.player_account = PlayerAccount(self,self.json)
+        self.player_account = PlayerAccount(self)
         self.settings = {}
         try:
             #in der Firma gehen keine requests, daher auskommentiert und response lokal abgelegt
-            #server_api_request = requests.get("https://lobby.ogame.gameforge.com/api/servers")
+            server_api_request = requests.get("https://lobby.ogame.gameforge.com/api/servers")
             server_api_json = server_api_request.json()
         except Exception:#requests.exceptions.ConnectionError: #uncomment when testing is done
             print("Server API Request didn't load. Using local file.")
             server_api_json = json.loads(server_api)
         for server in server_api_json:
-            if self.uni_number == server["number"]:
+            if self.player_account.uni_number == server["number"]:
                 self.name = server["name"]
                 self.language = server["language"]
                 for key in server["settings"]:
@@ -30,4 +30,5 @@ class Universe:
 
 
 if __name__ == "__main__":
-    u1 = Universe(json_acc)
+    pass
+    # u1 = Universe(json_acc)
