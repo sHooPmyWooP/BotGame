@@ -155,8 +155,10 @@ class Account:
 
 
 if __name__ == "__main__":
-    a1 = Account("david-achilles@hotmail.de", "OGame!4friends")
-    a1.login("Octans")
+    #a1 = Account("david-achilles@hotmail.de", "OGame!4friends")
+    #a1.login("Octans")
+    a2 = Account("nico.doehrn@gmail.com", "Ogame4Friends")
+    a2.login("Galatea")
     # a1.account_init()
 
     print("Done...")
