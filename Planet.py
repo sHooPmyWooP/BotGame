@@ -11,25 +11,11 @@ from Ship import Ship
 
 
 class Planet:
-    def __init__(self, acc):
-        driver = acc.getDriver()
-        # todo: Wenn Klasse Spieleraccount angelegt - mitgeben für uniNr, Sprache & driver (acc ersetzen) (Statt Account)
-        self.acc = acc
+    def __init__(self, id):
         self.buildings = {}
         self.ships = {}
         self.defenses = {}
-
-        # get Links
-        time.sleep(2)  # w/o sleep loading page will be captured
-        driver.get(f"https://s167-de.ogame.gameforge.com/game/index.php?page=ingame&component=overview")
-        self.link = driver.current_url
-        self.linkOverview = re.sub("component=\w*", "component=overview", self.link)
-        self.linkSupplies = re.sub("component=\w*", "component=supplies", self.link)
-        self.linkFacilities = re.sub("component=\w*", "component=facilities", self.link)
-        self.linkShipyard = re.sub("component=\w*", "component=shipyard", self.link)
-        self.linkDefenses = re.sub("component=\w*", "component=defenses", self.link)
-        self.linkFleet = re.sub("component=\w*", "component=fleetdispatch", self.link)
-        self.linkGalaxy = re.sub("component=\w*", "component=galaxy", self.link)
+        self.id = id
 
         #####
         # Overview
@@ -86,7 +72,10 @@ class Planet:
         try:
             driver.get(self.linkSupplies)
             soup = acc.getSoup()
+            print(soup)
+            print("--------")
             for li in soup.find_all("ul", {"id": "producers"}):
+                print(li)
                 for building in li.find_all("li"):
                     self.buildings[building['aria-label']] = Building(building['aria-label'],
                                                                       building['data-technology'],

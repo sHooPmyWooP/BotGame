@@ -17,6 +17,7 @@ class Building:
     def upgrade(self):
         """
         upgrade building
+        todo: not working by now
         :return: True on success
         """
         driver = self.planet.acc.driver
@@ -35,18 +36,19 @@ class Building:
         # Go To Supplies/Facilities Page
         time.sleep(1)
         driver.get(link)
-        print(2,link)
-        time.sleep(1)
-        soup = self.planet.acc.getSoup()
-
-        # Get Upgrade Link
-        soup = soup.find("li", {"data-technology": self.id})
-        link = re.search(pattern='(data-target=\".*?\")', string=str(soup))
-        link = re.search(pattern='\".*\"', string=str(link.group(0)))
-        link = link.group(0).replace('"', '')
-
-        # Push the button and Trigger Upgrade
-        print(link)
-        time.sleep(1)
-        requests.get(link)
+        # print(2,link)
+        # time.sleep(1)
+        # soup = self.planet.acc.getSoup()
+        #
+        # # Get Upgrade Link
+        # soup = soup.find("li", {"data-technology": self.id})
+        # link = re.search(pattern='(data-target=\".*?\")', string=str(soup))
+        # link = re.search(pattern='\".*\"', string=str(link.group(0)))
+        # link = link.group(0).replace('"', '')
+        #
+        # # Push the button and Trigger Upgrade
+        # print(link)
+        # requests.get(link)
+        # driver.get(link)
+        print("Upgrade done...")
         return True

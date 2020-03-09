@@ -1,164 +1,88 @@
-# Todo: Pfad in config verschieben - Config anlegen
-import json
-import os
-import time
-import traceback
+import requests
 
-from bs4 import BeautifulSoup
-from selenium import webdriver
-from selenium.common.exceptions import NoSuchElementException
-
-from Universe import Universe
-
-# https://s167-de.ogame.gameforge.com/game/index.php?page=componentOnly&component=eventList&ajax=1 - Pfad merken für Ereignisse
-pathChromedriver = os.path.dirname(os.path.realpath(__file__)) + r"/Resources/Driver/chromedriver.exe"
-
-
-# server-api = https://lobby.ogame.gameforge.com/api/servers
+from Planet import Planet
 
 
 class Account:
-    """
-    """
 
-    def __init__(self, accName, accPW):
-        """
-        :param accName: str
-        :param accPW:  str
-        json_acc: JSON Return from Account API https://lobby.ogame.gameforge.com/api/users/me/accounts
-        soup_accounts: str of soup from Universe selection page
-        login_uni: Universe (currently active)
-        """
-        self.accName = accName
-        self.accPW = accPW
-        self.json_acc = ""
-        self.Universes = []
-        self.soup_accounts = ""
-        self.login_uni = None
-        self.driver = None
-        self.overview_page = ""
+    def __init__(self, universe, username, password, user_agent=None, proxy=''):
+        self.universe = universe
+        self.username = username
+        self.password = password
+        self.chat_token = None
+        self.sendfleet_token = None
+        self.build_token = None
+        self.session = requests.Session()
+        self.session.proxies.update({'https': proxy})
+        self.server_id = None
+        self.server_number = None
+        self.server_language = None
+        self.server_name = ""
+        self.server_settings = {}
+        self.planets = []
 
-    def login(self, uni_name):
-        """
-        Login to certain universe, populate Account with Universe Objects
-        :param uni_name: str name of universe
-        :return: True if successful, False on Error
-        """
-        try:
-            self.driver = self.newChromeBrowser(pathChromedriver=pathChromedriver)
-            self.driver.maximize_window()  # Selection of universe won't work if not fullscreen
-            self.driver.get("https://lobby.ogame.gameforge.com/de_DE/")  # todo auslagern in Config
-            btnEinloggenAuswahl = self.driver.find_element_by_xpath(
-                '//*[@id="loginRegisterTabs"]/ul/li[1]')  # Login vs. Registrieren Top
-            btnEinloggenAuswahl.click()
+        if user_agent is None:
+            user_agent = {
+                'User-Agent':
+                    'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) '
+                    'Chrome/80.0.3987.100 Mobile Safari/537.36'}
+        self.session.headers.update(user_agent)
+        self.universes = []
 
-            btnEinloggen = self.driver.find_element_by_xpath('// *[ @ id = "loginForm"] / p / button[1]')
-            email = self.driver.find_element_by_name("email")
-            password = self.driver.find_element_by_name("password")
+        self.login()
 
-            email.send_keys(self.accName)
-            password.send_keys(self.accPW)
-            btnEinloggen.click()  # login cookie is now set
-            time.sleep(1)
+    def login(self):
+        form_data = {'kid': '',
+                     'language': 'en',
+                     'autologin': 'false',
+                     'credentials[email]': self.username,
+                     'credentials[password]': self.password}
+        logged = self.session.post('https://lobby.ogame.gameforge.com/api/users', data=form_data)
+        servers = self.session.get('https://lobby.ogame.gameforge.com/api/servers').json()
+        for server in servers:
+            if server['name'] == self.universe:
+                self.server_number = server['number']
+                break
+        accounts = self.session.get('https://lobby.ogame.gameforge.com/api/users/me/accounts').json()
+        for account in accounts:
+            if account['server']['number'] == self.server_number:
+                self.server_id = account['id']
+                self.server_language = account['server']['language']
+        login_link = self.session.get('https://lobby.ogame.gameforge.com/api/users/me/loginLink?'
+                                      'id={}'
+                                      '&server[language]={}'
+                                      '&server[number]={}'
+                                      '&clickedButton=account_list'.format(self.server_id,
+                                                                           self.server_language,
+                                                                           self.server_number)).json()
+        self.session.content = self.session.get(login_link['url']).text
 
-            if self.create_universes_from_account_api(self):
-                print("All Universes created.")
-            else:
-                print("No active Universe identified after Login.")
-                return False
+        # get Server info
+        for server in self.session.get("https://lobby.ogame.gameforge.com/api/servers").json():
+            if self.server_number == server["number"]:
+                self.server_name = server["name"]
+                for key in server["settings"]:
+                    self.server_settings[key] = server["settings"][key]
+                break
 
-            # Universe to login to
-            for uni in self.Universes:
-                if uni.name == uni_name:
-                    self.login_uni = uni
-                    break
+        # create Planets
+        for id in self.get_planet_ids():
+            self.planets.append(Planet(self, id))
 
-            # Continue to Login - select Universe
-            self.driver.get("https://lobby.ogame.gameforge.com/de_DE/accounts")  # Universe-Overview
-            time.sleep(1)
+    def get_planet_ids(self):
+        planet_ids = []
+        marker_string = 'id="planet-'
+        for planet_id in re.finditer(marker_string, self.session.content):
+            id = self.session.content[planet_id.start() + 11:planet_id.end() + 8]
+            planet_ids.append(int(id))
+        return planet_ids
 
-            self.soup_accounts = self.getSoup()
-            accounts_table = self.soup_accounts.find("div", {"class": "rt-table"})
-            uni_pos = 1
-            for row in accounts_table.findAll("div", {"class": 'server-name-cell'}):
-                if row.text == self.login_uni.name:
-                    break
-                else:
-                    uni_pos += 1
+    def create_planet(self):
 
-            btnLogin = self.driver.find_element_by_xpath(
-                f'//*[@id="accountlist"]/div/div[1]/div[2]/div[{uni_pos}]/div/div[11]/button/span')
-            btnLogin.click()
-
-            time.sleep(2)
-            if len(self.driver.window_handles[1])>1:
-                self.driver.switch_to.window(self.driver.window_handles[1]) # Assuming after Login new Tab at Index 1
-                # if a new Tab gets created
-            self.overview_page = self.driver.current_url
-            print(
-                f"Successful Login [{self.accName}] in Universe [{self.login_uni.name}]")
-            return True
-        except NoSuchElementException as e:
-            print("Element not found.",e, traceback.format_exc())
-            return False
-        except Exception as e:
-            print("Login failed.", e)
-            self.driver.close()
-            return False
-
-    def create_universes_from_account_api(self, driver):
-        # Account Basedata - creation of Universe
-        # todo: Maybe solve per request? login problematic
-        # request-account details unter https://lobby.ogame.gameforge.com/api/users/me/accounts
-        self.driver.get("https://lobby.ogame.gameforge.com/api/users/me/accounts")
-        accInfo = self.getSoup().text
-        self.json_acc = json.loads(accInfo)
-        if self.json_acc:
-            for uni in self.json_acc:
-                self.Universes.append(Universe(self,uni))
-            return True
-        return False
-
-    def account_init(self):
-        # todo: Planeten aus Overview herauslesen und initialisieren. Methode in Player_Account verschieben wenn es die Klasse gibt
-        driver = self.driver
-        driver.get(self.overview_page)
-        #print(self.overview_page)
-        time.sleep(1)
-        soup = self.getSoup()
-        print(soup)
-
-
-    @staticmethod
-    def newChromeBrowser(pathChromedriver, headless=False, detach=True):
-        """
-        Helper function that creates a new Selenium browser
-        pathChromedriver: str
-        headless: bool (Browser visible)
-        detach: bool (Browser stays open after code execution)
-        """
-        options = webdriver.ChromeOptions()
-        if headless:
-            options.add_argument('headless')
-        if (detach == True):
-            options.add_experimental_option("detach", True)
-        browser = webdriver.Chrome(options=options, executable_path=pathChromedriver)
-        return browser
-
-    def getDriver(self):
-        return self.driver
-
-    def getSoup(self):
-        # Get current Soup
-        html = self.driver.page_source
-        return BeautifulSoup(html, features="html.parser")
+        pass
 
 
 if __name__ == "__main__":
-    #a1 = Account("david-achilles@hotmail.de", "OGame!4friends")
-    #a1.login("Octans")
-    a2 = Account("nico.doehrn@gmail.com", "Ogame4Friends")
-    a2.login("Galatea")
-    # a1.account_init()
+    a1 = Account(universe="Octans", username="david-achilles@hotmail.de", password="OGame!4friends")
 
     print("Done...")
