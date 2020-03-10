@@ -74,13 +74,14 @@ class Planet:
 
         for result in soup.findAll("ul", {"id": 'producers'}):
             for building in result.findAll("li", {"class": "technology"}):
-                is_possible = True if 'data-status="on"' in building else False
-                in_construction = True if 'data-status="active"' in building else False
+                level_list = building.text.strip().split(" ")
+                level = [x.replace(r"\n", "") for x in level_list]
+                is_possible = True if building["data-status"] == "on" else False
+                in_construction = True if building["data-status"] == "active" else False
                 self.buildings[building['aria-label']] = Building(building['aria-label'],
                                                                   building['data-technology'],
-                                                                  building.text, "supplies", is_possible,
+                                                                  level[0], "supplies", is_possible,
                                                                   in_construction, self)
-
         #####
         # Facility Buildings
         #####
@@ -127,3 +128,6 @@ class Planet:
         for building in self.buildings:
             self.buildings[building].set_construction_cost()
             self.buildings[building].set_construction_time()
+
+    def __repr__(self):
+        return self.name + " id:" + str(self.id)

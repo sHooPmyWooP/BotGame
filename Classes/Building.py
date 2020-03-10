@@ -1,3 +1,4 @@
+import os
 import re
 
 from Classes.Resources import Resources
@@ -16,6 +17,9 @@ class Building:
         self.construction_time = 0
         self.construction_cost = Resources()
 
+    def __repr__(self):
+        return self.name + ": " + str(self.level)
+
     def get_name(self):
         return self.name
 
@@ -27,7 +31,9 @@ class Building:
             "economySpeed"] * 2 ** nanite.level)) * 60 * 60) + 1  # hours to seconds
 
     def set_construction_cost(self):
-        with open("Resources/Static_Information/Building_Base_Info", "r") as f:
+        cur_path = os.path.dirname(__file__)
+        new_path = os.path.relpath('BotGame\Resources\Static_Information\Building_Base_Info', cur_path)
+        with open(new_path, "r") as f:
             next(f)
             for line in f:
                 line = line.split("|")
@@ -53,6 +59,8 @@ class Building:
             .format(self.planet.acc.server_number, self.planet.acc.server_language, component,
                     self.planet.acc.build_token, type, amount)
         response = self.planet.acc.session.get(build_url)
+        self.planet.set_supply_buildings()
+        print(self.name + " has been built on " + self.planet.name)
 
     def get_init_build_token(self, content, component):
         marker_string = 'component={}&modus=1&token='.format(component)

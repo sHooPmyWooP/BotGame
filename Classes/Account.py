@@ -110,5 +110,5 @@ class Account:
 
 if __name__ == "__main__":
     a1 = Account(universe="Octans", username="david-achilles@hotmail.de", password="OGame!4friends")
-    a1.planets[0].buildings["Metallmine"].build()
+    print(a1.planets[0].buildings)
     print("Done...")
