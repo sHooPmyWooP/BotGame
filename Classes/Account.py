@@ -1,6 +1,10 @@
-import requests
+import re
 
-from Planet import Planet
+import requests
+from bs4 import BeautifulSoup
+
+from Classes.Planet import Planet
+from Classes.Research import Research
 
 
 class Account:
@@ -20,6 +24,7 @@ class Account:
         self.server_name = ""
         self.server_settings = {}
         self.planets = []
+        self.research = {}
 
         if user_agent is None:
             user_agent = {
@@ -69,6 +74,21 @@ class Account:
         for id in self.get_planet_ids():
             self.planets.append(Planet(self, id))
 
+        # get Research
+        response = self.session.get('https://s{}-{}.ogame.gameforge.com/game/index.php?page=ingame&'
+                                    'component=research&cp={}'
+                                    .format(self.server_number, self.server_language,
+                                            self.planets[0].id)).text
+        soup = BeautifulSoup(response, features="html.parser")
+        for result in soup.findAll("div", {"id": 'technologies'}):
+            for research in result.find_all("li", {"class": "technology"}):
+                is_possible = True if 'data-status="on"' in research else False
+                in_construction = True if 'data-status="active"' in research else False
+                level_str_list = re.findall('\d+', research.text)  # avoid problem with Bonus (4+3)
+                level_sum = sum([int(val) for val in level_str_list])  # sum up vals from list ['4','3']
+                self.research[research['aria-label']] = Research(research['aria-label'], research['data-technology'],
+                                                                 level_sum, is_possible, in_construction)
+
     def get_planet_ids(self):
         planet_ids = []
         marker_string = 'id="planet-'
@@ -76,10 +96,6 @@ class Account:
             id = self.session.content[planet_id.start() + 11:planet_id.end() + 8]
             planet_ids.append(int(id))
         return planet_ids
-
-    def create_planet(self):
-
-        pass
 
 
 if __name__ == "__main__":

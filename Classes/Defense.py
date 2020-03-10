@@ -1,6 +1,6 @@
 class Defense:
 
-    def __init__(self, name, wfid, count, planet):
+    def __init__(self, name, id, count, planet):
         """
         :param name:
         :param wfid:
@@ -8,7 +8,7 @@ class Defense:
         :param planet:
         """
         self.name = name
-        self.id = wfid
+        self.id = id
         self.count = count
         self.planet = planet
 
