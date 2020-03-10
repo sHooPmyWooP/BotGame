@@ -94,7 +94,7 @@ class Planet:
                 in_construction = True if 'data-status="active"' in building else False
                 self.buildings[building['aria-label']] = Building(building['aria-label'],
                                                                   building['data-technology'],
-                                                                  building.text, "facility", is_possible,
+                                                                  building.text, "facilities", is_possible,
                                                                   in_construction, self)
 
         #####
@@ -120,3 +120,10 @@ class Planet:
             for defense in result.find_all("li", {"class": "technology"}):
                 self.defenses[defense['aria-label']] = Defense(defense['aria-label'], defense['data-technology'],
                                                                defense.text, self)
+
+        #####
+        # Building Construction Costs & Times
+        #####
+        for building in self.buildings:
+            self.buildings[building].set_construction_cost()
+            self.buildings[building].set_construction_time()

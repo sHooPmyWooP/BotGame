@@ -97,8 +97,18 @@ class Account:
             planet_ids.append(int(id))
         return planet_ids
 
+    def get_init_chat_token(self):
+        marker_string = 'var ajaxChatToken = '
+        for re_obj in re.finditer(marker_string, self.session.content):
+            self.chat_token = self.session.content[re_obj.start() + len(marker_string): re_obj.end() + 35].split('"')[1]
+
+    def get_init_sendfleet_token(self, content):
+        marker_string = 'var fleetSendingToken = '
+        for re_obj in re.finditer(marker_string, content):
+            self.sendfleet_token = content[re_obj.start() + len(marker_string): re_obj.end() + 35].split('"')[1]
+
 
 if __name__ == "__main__":
     a1 = Account(universe="Octans", username="david-achilles@hotmail.de", password="OGame!4friends")
-
+    a1.planets[0].buildings["Metallmine"].build()
     print("Done...")
