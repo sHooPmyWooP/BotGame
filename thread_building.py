@@ -47,7 +47,7 @@ def build_next(acc, planet_nr):
 
 
 def thread_building(planet):
-    print("Starting Thread...", planet.name)
+    print("Starting Thread...")
     while True:
         # todo: before new check - update buildings & energy
         build_next(a1, planet)
@@ -58,5 +58,8 @@ a1 = Account(universe="Octans", username="david-achilles@hotmail.de", password="
 print("Login...")
 
 with concurrent.futures.ThreadPoolExecutor() as executor:
-    for i, planet in enumerate(a1.planets):
-        executor.submit(thread_building, i)
+    p0 = executor.submit(thread_building, 0)
+    p1 = executor.submit(thread_building, 1)
+    # for i, planet in enumerate(a1.planets):
+    #     print(i)
+    #     executor.submit(thread_building, i)

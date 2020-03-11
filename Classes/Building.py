@@ -59,7 +59,7 @@ class Building:
             .format(self.planet.acc.server_number, self.planet.acc.server_language, component,
                     self.planet.acc.build_token, type, amount)
         response = self.planet.acc.session.get(build_url)
-        self.planet.set_supply_buildings()
+        # self.planet.set_supply_buildings()
         print(self.name + " has been built on " + self.planet.name)
 
     def get_init_build_token(self, content, component):
