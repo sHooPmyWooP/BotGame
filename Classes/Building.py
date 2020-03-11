@@ -16,6 +16,7 @@ class Building:
         self.in_construction = in_construction
         self.construction_time = 0
         self.construction_cost = Resources()
+        self.energy_consumption = 0
 
     def __repr__(self):
         return self.name + ": " + str(self.level)
@@ -39,11 +40,14 @@ class Building:
                 line = line.split("|")
                 if line[1] == self.id:
                     line_float = [float(x) for x in line[2:]]
-                    base_factor, base_metal, base_crystal, base_deut = line_float[:]
+                    base_factor, base_metal, base_crystal, base_deut, energy_factor, base_energy = line_float[:]
                     cost_metal = int(base_metal * base_factor ** self.level)
                     cost_crystal = int(base_crystal * base_factor ** self.level)
                     cost_deut = int(base_deut * base_factor ** self.level)
                     self.construction_cost = Resources(cost_metal, cost_crystal, cost_deut)
+                    print("base_energy",base_energy, "self.level", self.level, "energy_factor",energy_factor)
+                    self.energy_consumption = (base_energy * self.level * energy_factor ** self.level)
+                    print("self.energy_consumption",self.energy_consumption)
 
     def build(self, amount=1):
         type = self.id
@@ -61,6 +65,9 @@ class Building:
         response = self.planet.acc.session.get(build_url)
         # self.planet.set_supply_buildings()
         print(self.name + " has been built on " + self.planet.name)
+        self.set_construction_cost()
+        self.set_construction_time()
+        self.level += 1
 
     def get_init_build_token(self, content, component):
         marker_string = 'component={}&modus=1&token='.format(component)
