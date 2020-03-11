@@ -13,6 +13,13 @@ def build_next(acc, planet_nr):
 
     print(planet, metall, kristall, solar, energy)
 
+    for building in planet.buildings:
+        # print(planet.buildings[building].id)
+        if planet.buildings[building].in_construction:
+            print(f"sleeping due to construction of {building}")
+            time.sleep(60)
+            return
+
     if metall.level - kristall.level > 2:
         print(kristall.energy_consumption)
         if int(kristall.energy_consumption) >= int(energy):
@@ -69,7 +76,7 @@ a1 = Account(universe="Octans", username="david-achilles@hotmail.de", password="
 
 with concurrent.futures.ThreadPoolExecutor() as executor:
     p0 = executor.submit(thread_building, 0)
-    # p1 = executor.submit(thread_building, 1)
+    p1 = executor.submit(thread_building, 1)
     # for i, planet in enumerate(a1.planets):
     #     print(i)
     #     executor.submit(thread_building, i)

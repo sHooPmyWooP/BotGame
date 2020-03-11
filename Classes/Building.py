@@ -45,9 +45,9 @@ class Building:
                     cost_crystal = int(base_crystal * base_factor ** self.level)
                     cost_deut = int(base_deut * base_factor ** self.level)
                     self.construction_cost = Resources(cost_metal, cost_crystal, cost_deut)
-                    print("base_energy",base_energy, "self.level", self.level, "energy_factor",energy_factor)
+                    # print("base_energy",base_energy, "self.level", self.level, "energy_factor",energy_factor)
                     self.energy_consumption = (base_energy * self.level * energy_factor ** self.level)
-                    print("self.energy_consumption",self.energy_consumption)
+                    # print("self.energy_consumption",self.energy_consumption)
 
     def build(self, amount=1):
         type = self.id
