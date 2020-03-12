@@ -78,10 +78,12 @@ class Planet:
                 level = [x.replace(r"\n", "") for x in level_list]
                 is_possible = True if building["data-status"] == "on" else False
                 in_construction = True if building["data-status"] == "active" else False
+                construction_finished_in_seconds = int(building["data-total"]) if in_construction else 0
                 self.buildings[building['aria-label']] = Building(building['aria-label'],
                                                                   building['data-technology'],
                                                                   level[0], "supplies", is_possible,
-                                                                  in_construction, self)
+                                                                  in_construction, construction_finished_in_seconds,
+                                                                  self)
         #####
         # Facility Buildings
         #####
@@ -93,10 +95,12 @@ class Planet:
             for building in result.findAll("li", {"class": "technology"}):
                 is_possible = True if 'data-status="on"' in building else False
                 in_construction = True if 'data-status="active"' in building else False
+                construction_finished_in_seconds = int(building["data-total"]) if in_construction else 0
                 self.buildings[building['aria-label']] = Building(building['aria-label'],
                                                                   building['data-technology'],
                                                                   building.text, "facilities", is_possible,
-                                                                  in_construction, self)
+                                                                  in_construction, construction_finished_in_seconds,
+                                                                  self)
 
         #####
         # Ships (on the Planet)

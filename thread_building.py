@@ -16,13 +16,13 @@ def build_next(acc, planet_nr):
     for building in planet.buildings:
         # print(planet.buildings[building].id)
         if planet.buildings[building].in_construction:
-            print(f"sleeping due to construction of {building}")
-            time.sleep(60)
+            print(
+                f"sleeping due to construction of {building} for {planet.buildings[building].construction_finished_in_seconds}s")
+            time.sleep(planet.buildings[building].construction_finished_in_seconds)
             return
 
     if metall.level - kristall.level > 2:
-        print(kristall.energy_consumption)
-        if int(kristall.energy_consumption) >= int(energy):
+        if int(kristall.energy_consumption_nxt_level) >= int(energy):
             if solar.is_possible:
                 solar.build()
                 solar.level += 1
@@ -41,9 +41,8 @@ def build_next(acc, planet_nr):
             print(planet.name, "kristall_sleep", "kristall.is_possible:", kristall.is_possible)
             time.sleep(60)  # todo: calculate time until production is possible and run again
             return
-    print(metall.energy_consumption)
     if (metall.level - kristall.level) <= 2:
-        if metall.energy_consumption >= energy:
+        if metall.energy_consumption_nxt_level >= energy:
             if solar.is_possible:
                 solar.build()
                 solar.level += 1
@@ -73,10 +72,7 @@ def thread_building(planet):
 
 
 a1 = Account(universe="Octans", username="david-achilles@hotmail.de", password="OGame!4friends")
-
+# thread_building(2)
 with concurrent.futures.ThreadPoolExecutor() as executor:
-    p0 = executor.submit(thread_building, 0)
-    p1 = executor.submit(thread_building, 1)
-    # for i, planet in enumerate(a1.planets):
-    #     print(i)
-    #     executor.submit(thread_building, i)
+    for i in range(len(a1.planets)):
+        executor.submit(thread_building, i)
