@@ -33,7 +33,7 @@ class Building:
 
     def set_construction_cost(self):
         cur_path = os.path.dirname(__file__)
-        new_path = os.path.relpath('BotGame\Resources\Static_Information\Building_Base_Info', cur_path)
+        new_path = os.path.relpath('..\Resources\Static_Information\Building_Base_Info', cur_path)
         with open(new_path, "r") as f:
             next(f)
             for line in f:
