@@ -1,4 +1,5 @@
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 from Classes.Account import Account
 
@@ -67,10 +68,10 @@ def thread_building(planet):
 
 
 a1 = Account(universe="Octans", username="david-achilles@hotmail.de", password="OGame!4friends")
-a1.ogame_api.push_inactive_to_db()
+# a1.ogame_api.push_inactive_to_db()
 # thread_building(2)
-# with concurrent.futures.ThreadPoolExecutor() as executor:
-#     for i in range(len(a1.planets)):
-#         executor.submit(thread_building, i)
+with ThreadPoolExecutor() as executor:
+    for i in range(len(a1.planets)):
+        executor.submit(thread_building, i)
 
 print("Done...")

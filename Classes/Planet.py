@@ -9,7 +9,24 @@ from Classes.Ship import Ship
 
 
 class Planet:
+    """
+    Represents one Planet with relation to one account.
+    """
+
     def __init__(self, acc, id):
+        """
+
+        :param acc: Account (associated with the Planet)
+        :param id: int (ID of the Planet)
+        self.buildings = Dict of Buildings accessible e.g. as self.buildings["Metallmine"]
+        self.ships = Dict of Ships accessible e.g. as self.ships["Kleiner Transporter"]
+        self.defenses = Dict of Defenses accessible e.g. as self.defenses["Kleiner Transporter"]
+        self.coordinates = [0, 0, 0]
+        self.fields = used / total
+        self.temps = []  # min / max
+        self.resources = Resources()
+        self.energy = 0
+        """
         self.acc = acc
         self.buildings = {}
         self.ships = {}
@@ -20,6 +37,7 @@ class Planet:
         self.temps = []  # min / max
         self.resources = Resources()
         self.energy = 0
+        self.name = ""
 
         #####
         # Overview
@@ -44,8 +62,8 @@ class Planet:
                     "/")
             # Temperature
             for res in result.findAll("a", {"class": "planetlink"}):
-                temp = re.search("\d+ °C [a-zA-Z]* \d+", res["title"]).group(0)
-                temp = re.findall("\d+", temp)
+                temp = re.search("-?\d+ °C [a-zA-Z]* -?\d+", res["title"]).group(0)
+                temp = re.findall("-?\d+", temp)
                 self.temps = temp
 
         #####
@@ -56,8 +74,12 @@ class Planet:
         resources_names = ['metal', 'crystal', 'deuterium']
         for name in resources_names:
             marker_string = '<span id="resources_{}" data-raw='.format(name)
-            value = int(response.split(marker_string)[1].split('>')[1].split('<')[0].split(',')[0].replace('.', ''))
-            self.resources.set_value(value, name)
+            try:
+                value = int(response.split(marker_string)[1].split('>')[1].split('<')[0].split(',')[0].replace('.', ''))
+                self.resources.set_value(value, name)
+            except IndexError:
+                print(self.name, name)
+                pass  # Resource-Value = 0 and therefor not in string
 
         # Energy
         marker_string = '<span id="resources_energy" data-raw='

@@ -1,4 +1,3 @@
-import os
 import re
 
 from Classes.Resources import Resources
@@ -56,9 +55,8 @@ class Building:
         Calculate construction costs & required Energy after the build
         :return:
         """
-        cur_path = os.path.dirname(__file__)
-        new_path = os.path.relpath('BotGame\Resources\Static_Information\Building_Base_Info', cur_path)
-        with open(new_path, "r") as f:
+        path_building_base = r'Resources\Static_Information\Building_Base_Info'
+        with open(path_building_base, "r") as f:
             next(f)
             for line in f:
                 line = line.split("|")

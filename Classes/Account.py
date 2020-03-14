@@ -3,6 +3,7 @@ import re
 import requests
 from bs4 import BeautifulSoup
 
+from Classes.Message import SpyMessage
 from Classes.OGame_API import OGameAPI
 from Classes.Planet import Planet
 from Classes.Research import Research
@@ -27,6 +28,7 @@ class Account:
         self.planets = []
         self.research = {}
         self.ogame_api = None
+        self.spy_messages = {}
 
         if user_agent is None:
             user_agent = {
@@ -115,8 +117,22 @@ class Account:
     def get_ogame_api(self):
         self.ogame_api = OGameAPI(self.server_number, self.server_language)
 
+    def get_spy_messages(self, tab=20):
+        """
+        read messages from spy-inbox.
+        :param tab: int (Representing the OGame internal ID for different Inboxes.
+        -> 20: Spy, 21: Fight, 22: Expedition, 23: Transport, 24: Other...
+        :return: None
+        """
+        response = self.session.get(
+            f"https://s{self.server_number}-{self.server_language}.ogame.gameforge.com/game/index.php?page=messages&tab={tab}&ajax=1").text
+        soup = BeautifulSoup(response, features="html.parser")
+        for msg in soup.findAll("li", {"class": 'msg'}):
+            if msg["data-msg-id"] not in self.spy_messages:
+                self.spy_messages[msg["data-msg-id"]] = SpyMessage(msg)
+
 
 if __name__ == "__main__":
     a1 = Account(universe="Octans", username="david-achilles@hotmail.de", password="OGame!4friends")
-
+    a1.get_messages(20)
     print("Done...")
