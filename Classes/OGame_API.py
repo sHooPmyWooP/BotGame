@@ -1,3 +1,4 @@
+import sqlite3
 import xml.etree.ElementTree as ET
 
 import requests
@@ -44,6 +45,21 @@ class OGameAPI:
                     # PlanetEnemy(coords, player_id, status)
                     self.planets_players.append(PlanetEnemy(planet[1], player[0], player[1]))
 
+    def push_inactive_to_db(self):
+        self.map_players_to_planet()
+        conn = sqlite3.connect('Resources\db\inactive_player.db')
+        c = conn.cursor()
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS INACTIVE_PLAYERS(
+        server_number integer,
+        player_id integer,
+        player_status text,
+        planet_coords text);
+        """)
+
         for planet in self.planets_players:
             if planet.status == "I" or planet.status == "i":
-                print(planet.status, planet.coords)
+                c.execute(f"INSERT INTO INACTIVE_PLAYERS VALUES ('{self.server_number}', '{planet.player_id}',"
+                          f" '{planet.status}', '{planet.coords}');")
+        conn.commit()
+        conn.close()
