@@ -5,9 +5,22 @@ from Classes.Resources import Resources
 
 
 class Building:
+    """
+    represents one Building (incl. supply & facility) with relation to one planet
+    """
 
     def __init__(self, name, id, level, building_type, is_possible, in_construction, construction_finished_in_seconds,
                  planet):
+        """
+        :param name: str
+        :param id: int
+        :param level: int
+        :param building_type: str (hardcoded in planet)
+        :param is_possible: bool
+        :param in_construction: bool
+        :param construction_finished_in_seconds: int
+        :param planet: Planet
+        """
         self.name = name
         self.id = id
         self.level = int(level)
@@ -28,6 +41,10 @@ class Building:
         return self.name
 
     def set_construction_time(self):
+        """
+        Calculate construction time of build
+        :return: None
+        """
         robo = self.planet.buildings["Roboterfabrik"]
         nanite = self.planet.buildings["Nanitenfabrik"]
         self.construction_time = int(((self.construction_cost.get_metal() + self.construction_cost.get_crystal()) / (
@@ -35,6 +52,10 @@ class Building:
             "economySpeed"] * 2 ** nanite.level)) * 60 * 60) + 1  # hours to seconds
 
     def set_construction_cost(self):
+        """
+        Calculate construction costs & required Energy after the build
+        :return:
+        """
         cur_path = os.path.dirname(__file__)
         new_path = os.path.relpath('BotGame\Resources\Static_Information\Building_Base_Info', cur_path)
         with open(new_path, "r") as f:
@@ -57,6 +78,11 @@ class Building:
                         self.energy_consumption_nxt_level = 0
 
     def build(self, amount=1):
+        """
+        Upgrade Building to next level
+        :param amount: int (default 1)
+        :return: None
+        """
         type = self.id
         component = self.type
         response = self.planet.acc.session.get('https://s{}-{}.ogame.gameforge.com/game/index.php?page=ingame&'
@@ -76,6 +102,12 @@ class Building:
         self.level += 1
 
     def get_init_build_token(self, content, component):
+        """
+        necessary to process build method
+        :param content: str (response)
+        :param component: str (supply/facility)
+        :return:
+        """
         marker_string = 'component={}&modus=1&token='.format(component)
         for re_obj in re.finditer(marker_string, content):
             self.planet.acc.build_token = content[re_obj.start() + len(marker_string): re_obj.end() + 32]
