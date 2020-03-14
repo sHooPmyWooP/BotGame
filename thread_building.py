@@ -25,7 +25,6 @@ def build_next(acc, planet_nr):
         if int(kristall.energy_consumption_nxt_level) >= int(energy):
             if solar.is_possible:
                 solar.build()
-                solar.level += 1
                 time.sleep(solar.construction_time)
                 return
             else:
@@ -34,7 +33,6 @@ def build_next(acc, planet_nr):
                 return
         if kristall.is_possible:
             kristall.build()
-            kristall.level += 1
             time.sleep(kristall.construction_time)
             return
         else:
@@ -45,7 +43,6 @@ def build_next(acc, planet_nr):
         if metall.energy_consumption_nxt_level >= energy:
             if solar.is_possible:
                 solar.build()
-                solar.level += 1
                 time.sleep(solar.construction_time)
                 return
             else:
@@ -54,7 +51,6 @@ def build_next(acc, planet_nr):
                 return
         if metall.is_possible:
             metall.build()
-            metall.level += 1
             time.sleep(metall.construction_time)
             return
         else:
@@ -66,7 +62,7 @@ def build_next(acc, planet_nr):
 def thread_building(planet):
     print("Starting Thread...")
     while True:
-        # todo: before new check - update buildings & energy - vorübergehend mit neuem login gelöst
+        # todo: before new check - update buildings & energy
         build_next(a1, planet)
         a1.login()
 

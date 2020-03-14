@@ -37,6 +37,7 @@ class Account:
         self.login()
 
     def login(self):
+        self.planets = []
         print("Start login...")
         form_data = {'kid': '',
                      'language': 'en',

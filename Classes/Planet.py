@@ -132,6 +132,7 @@ class Planet:
         for building in self.buildings:
             self.buildings[building].set_construction_cost()
             self.buildings[building].set_construction_time()
+            # print(self.name,self.buildings[building].name,self.buildings[building].level,self.buildings[building].construction_finished_in_seconds)
 
     def __repr__(self):
         return self.name + " id:" + str(self.id)
