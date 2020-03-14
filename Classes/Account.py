@@ -3,6 +3,7 @@ import re
 import requests
 from bs4 import BeautifulSoup
 
+from Classes.OGame_API import OGameAPI
 from Classes.Planet import Planet
 from Classes.Research import Research
 
@@ -25,6 +26,7 @@ class Account:
         self.server_settings = {}
         self.planets = []
         self.research = {}
+        self.ogame_api = None
 
         if user_agent is None:
             user_agent = {
@@ -37,7 +39,7 @@ class Account:
         self.login()
 
     def login(self):
-        self.planets = []
+        self.planets = []  # planets get appended to the list
         print("Start login...")
         form_data = {'kid': '',
                      'language': 'en',
@@ -71,6 +73,7 @@ class Account:
                 for key in server["settings"]:
                     self.server_settings[key] = server["settings"][key]
                 break
+        self.get_ogame_api()  # API to get Players/Planets
 
         # create Planets
         for id in self.get_planet_ids():
@@ -108,6 +111,9 @@ class Account:
         marker_string = 'var fleetSendingToken = '
         for re_obj in re.finditer(marker_string, content):
             self.sendfleet_token = content[re_obj.start() + len(marker_string): re_obj.end() + 35].split('"')[1]
+
+    def get_ogame_api(self):
+        self.ogame_api = OGameAPI(self.server_number, self.server_language)
 
 
 if __name__ == "__main__":
