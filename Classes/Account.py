@@ -1,5 +1,5 @@
 import re
-
+import random
 import requests
 from bs4 import BeautifulSoup
 
@@ -71,7 +71,7 @@ class Account:
                     self.server_settings[key] = server["settings"][key]
                 break
 
-        # create Planets
+        # Add planets to PlanetList
         for id in self.get_planet_ids():
             self.planets.append(Planet(self, id))
 
@@ -87,8 +87,11 @@ class Account:
                 in_construction = True if 'data-status="active"' in research else False
                 level_str_list = re.findall('\d+', research.text)  # avoid problem with Bonus (4+3)
                 level_sum = sum([int(val) for val in level_str_list])  # sum up vals from list ['4','3']
-                self.research[research['aria-label']] = Research(research['aria-label'], research['data-technology'],
-                                                                 level_sum, is_possible, in_construction)
+                self.research[research['aria-label']] = Research(name=research['aria-label'],
+                                                                 id=research['data-technology'],
+                                                                 level=level_sum,
+                                                                 is_possible=is_possible,
+                                                                 in_construction=in_construction)
 
     def get_planet_ids(self):
         planet_ids = []
@@ -109,7 +112,6 @@ class Account:
             self.sendfleet_token = content[re_obj.start() + len(marker_string): re_obj.end() + 35].split('"')[1]
 
 
-if __name__ == "__main__":
-    a1 = Account(universe="Octans", username="david-achilles@hotmail.de", password="OGame!4friends")
-    print(a1.planets[0].buildings)
-    print("Done...")
+
+
+

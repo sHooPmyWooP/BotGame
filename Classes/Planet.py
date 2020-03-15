@@ -42,11 +42,12 @@ class Planet:
             for res in result.findAll("a", {"class": "planetlink"}):
                 self.fields = re.search("\(\d*\/\d*\)", res["title"]).group(0).replace("(", "").replace(")", "").split(
                     "/")
+
             # Temperature
-            for res in result.findAll("a", {"class": "planetlink"}):
-                temp = re.search("\d+ °C [a-zA-Z]* \d+", res["title"]).group(0)
-                temp = re.findall("\d+", temp)
-                self.temps = temp
+            # for res in result.findAll("a", {"class": "planetlink"}):
+            #     temp = re.search("\d+ °C [a-zA-Z]* \d+", res["title"]).group(0)
+            #     temp = re.findall("\d+", temp)
+            #     self.temps = temp
 
         #####
         # Resources (on the Planet)
@@ -131,3 +132,35 @@ class Planet:
 
     def __repr__(self):
         return self.name + " id:" + str(self.id)
+
+    def get_ships(self, id):
+        response = self.session.get('https://s{}-{}.ogame.gameforge.com/game/index.php?page=ingame&'
+                                    'component=shipyard&cp={}'
+                                    .format(self.server_number, self.server_language, id)).text
+        marker_string = '''class="amount"
+                  data-value="'''
+
+        class ships_amount(object):
+            ships_amount = []
+            for re_obj in re.finditer(marker_string.format(marker_string), response):
+                ships_amount.append(int(response[re_obj.start() + len(marker_string):
+                                                 re_obj.end() + 10].split('"')[0]))
+            light_fighter = ships_amount[0]
+            heavy_fighter = ships_amount[1]
+            cruiser = ships_amount[2]
+            battleship = ships_amount[3]
+            interceptor = ships_amount[4]
+            bomber = ships_amount[5]
+            destroyer = ships_amount[6]
+            deathstar = ships_amount[7]
+            reaper = ships_amount[8]
+            explorer = ships_amount[9]
+            small_transporter = ships_amount[10]
+            large_transporter = ships_amount[11]
+            colonyShip = ships_amount[12]
+            recycler = ships_amount[13]
+            espionage_probe = ships_amount[14]
+            solarSatellite = ships_amount[15]
+            crawler = ships_amount[16]
+
+        return ships_amount
