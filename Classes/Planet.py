@@ -194,7 +194,7 @@ class PlanetReader:
                 construction_finished_in_seconds = int(building["data-total"]) if in_construction else 0
                 self.planet.buildings[building['aria-label']] = Building(building['aria-label'],
                                                                          building['data-technology'],
-                                                                         level, "facilities", is_possible,
+                                                                         level[0], "facilities", is_possible,
                                                                          in_construction,
                                                                          construction_finished_in_seconds,
                                                                          self.planet)
