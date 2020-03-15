@@ -78,11 +78,7 @@ class Account:
                 break
         self.get_ogame_api()  # API to get Players/Planets
 
-        # create Planets
-        for id in self.get_planet_ids():
-            self.planets.append(Planet(self, id))
-
-        # get Research
+    def read_in_researches(self):
         response = self.session.get('https://s{}-{}.ogame.gameforge.com/game/index.php?page=ingame&'
                                     'component=research&cp={}'
                                     .format(self.server_number, self.server_language,
@@ -94,8 +90,23 @@ class Account:
                 in_construction = True if 'data-status="active"' in research else False
                 level_str_list = re.findall('\d+', research.text)  # avoid problem with Bonus (4+3)
                 level_sum = sum([int(val) for val in level_str_list])  # sum up vals from list ['4','3']
-                self.research[research['aria-label']] = Research(research['aria-label'], research['data-technology'],
-                                                                 level_sum, is_possible, in_construction)
+                self.research[research['aria-label']] = Research(name=research['aria-label'],
+                                                                 id=research['data-technology'],
+                                                                 level=level_sum,
+                                                                 is_possible=is_possible,
+                                                                 in_construction=in_construction)
+
+    def read_in_all_planets(self):
+        for planetId in self.get_planet_ids():
+            planet = Planet(self, planetId)
+            planet.reader.read_all()
+            self.planets.append(planet)
+            print('Planet ' + planet.name + ' with id ' + str(planet.id) + ' was added')
+
+    def read_in_planet(self, planetId):
+        planet = Planet(self, planetId)
+        planet.reader.read_all()
+        return self.planets.append(planet)
 
     def get_planet_ids(self):
         planet_ids = []
