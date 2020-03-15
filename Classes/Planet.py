@@ -52,6 +52,41 @@ class Planet:
     def __repr__(self):
         return self.name + " id:" + str(self.id)
 
+    def send_fleet(self, mission_id, coords, ships, resources=[0, 0, 0], speed=10, holdingtime=0):
+        # ships = [["Ship_Name", "Amount"],...]
+        response = self.acc.session.get(
+            f'https://s{self.acc.server_number}-{self.acc.server_language}.ogame.gameforge.com/game/index.php?page=ingame&component=fleetdispatch&cp={self.id}').text
+        self.acc.get_init_sendfleet_token(response)
+        form_data = {'token': self.acc.sendfleet_token}
+
+        for ship in ships:
+            ship_type = f'am{ship[0]}'
+            ship_amount = ship[1]
+            form_data.update({ship_type: ship_amount})
+            print(ship_type, ship_amount)
+
+        form_data.update({'galaxy': coords.galaxy,
+                          'system': coords.system,
+                          'position': coords.position,
+                          'type': coords.destination,
+                          'metal': resources[0],
+                          'crystal': resources[1],
+                          'deuterium': resources[2],
+                          'prioMetal': 1,
+                          'prioCrystal': 2,
+                          'prioDeuterium': 3,
+                          'mission': mission_id,
+                          'speed': speed,
+                          'retreatAfterDefenderRetreat': 0,
+                          'union': 0,
+                          'holdingtime': holdingtime})
+        print(form_data)
+        response = self.acc.session.post('https://s{}-{}.ogame.gameforge.com/game/index.php?page=ingame&'
+                                         'component=fleetdispatch&action=sendFleet&ajax=1&asJson=1'
+                                         .format(self.acc.server_number, self.acc.server_language), data=form_data,
+                                         headers={'X-Requested-With': 'XMLHttpRequest'}).json()
+        print(response)
+        return response['success']
 
 class PlanetReader:
     def __init__(self, planet):
@@ -179,36 +214,4 @@ class PlanetReader:
                 self.planet.defenses[defense['aria-label']] = Defense(defense['aria-label'], defense['data-technology'],
                                                                       defense.text, self.planet)
 
-    def send_fleet(self, mission_id, coords, ships, resources=[0, 0, 0], speed=10, holdingtime=0):
-        response = self.planet.acc.session.get(
-            f'https://s{self.planet.acc.server_number}-{self.planet.acc.server_language}.ogame.gameforge '
-            f'.com/game/index.php?page=ingame&component=fleetdispatch&cp={self.planet.id}').text
-        self.planet.acc.get_init_sendfleetroken(self, response)
 
-        form_data = {'token': self.planet.acc.sendfleet_token}
-
-        for ship in ships:
-            ship_type = f'am{ship[0]}'
-            form_data.update({ship_type: ship[1]})
-
-        form_data.update({'galaxy': coords[0],
-                          'system': coords[1],
-                          'position': coords[2],
-                          'type': coords[3],
-                          'metal': resources[0],
-                          'crystal': resources[1],
-                          'deuterium': resources[2],
-                          'prioMetal': 1,
-                          'prioCrystal': 2,
-                          'prioDeuterium': 3,
-                          'mission': mission_id,
-                          'speed': speed,
-                          'retreatAfterDefenderRetreat': 0,
-                          'union': 0,
-                          'holdingtime': holdingtime})
-
-        response = self.session.post('https://s{}-{}.ogame.gameforge.com/game/index.php?page=ingame&'
-                                     'component=fleetdispatch&action=sendFleet&ajax=1&asJson=1'
-                                     .format(self.server_number, self.server_language), data=form_data,
-                                     headers={'X-Requested-With': 'XMLHttpRequest'}).json()
-        return response['success']
