@@ -9,7 +9,24 @@ from Classes.Ship import Ship
 
 
 class Planet:
+    """
+    Represents one Planet with relation to one account.
+    """
+
     def __init__(self, acc, id):
+        """
+
+        :param acc: Account (associated with the Planet)
+        :param id: int (ID of the Planet)
+        self.buildings = Dict of Buildings accessible e.g. as self.buildings["Metallmine"]
+        self.ships = Dict of Ships accessible e.g. as self.ships["Kleiner Transporter"]
+        self.defenses = Dict of Defenses accessible e.g. as self.defenses["Kleiner Transporter"]
+        self.coordinates = [0, 0, 0]
+        self.fields = used / total
+        self.temps = []  # min / max
+        self.resources = Resources()
+        self.energy = 0
+        """
         self.acc = acc
         self.buildings = {}
         self.ships = {}
@@ -20,6 +37,7 @@ class Planet:
         self.temps = []  # min / max
         self.resources = Resources()
         self.energy = 0
+        self.name = ""
 
         #####
         # Overview
@@ -42,12 +60,11 @@ class Planet:
             for res in result.findAll("a", {"class": "planetlink"}):
                 self.fields = re.search("\(\d*\/\d*\)", res["title"]).group(0).replace("(", "").replace(")", "").split(
                     "/")
-
             # Temperature
-            # for res in result.findAll("a", {"class": "planetlink"}):
-            #     temp = re.search("\d+ °C [a-zA-Z]* \d+", res["title"]).group(0)
-            #     temp = re.findall("\d+", temp)
-            #     self.temps = temp
+            for res in result.findAll("a", {"class": "planetlink"}):
+                temp = re.search("-?\d+ °C [a-zA-Z]* -?\d+", res["title"]).group(0)
+                temp = re.findall("-?\d+", temp)
+                self.temps = temp
 
         #####
         # Resources (on the Planet)
@@ -57,8 +74,12 @@ class Planet:
         resources_names = ['metal', 'crystal', 'deuterium']
         for name in resources_names:
             marker_string = '<span id="resources_{}" data-raw='.format(name)
-            value = int(response.split(marker_string)[1].split('>')[1].split('<')[0].split(',')[0].replace('.', ''))
-            self.resources.set_value(value, name)
+            try:
+                value = int(response.split(marker_string)[1].split('>')[1].split('<')[0].split(',')[0].replace('.', ''))
+                self.resources.set_value(value, name)
+            except IndexError:
+                print(self.name, name)
+                pass  # Resource-Value = 0 and therefor not in string
 
         # Energy
         marker_string = '<span id="resources_energy" data-raw='
@@ -79,10 +100,12 @@ class Planet:
                 level = [x.replace(r"\n", "") for x in level_list]
                 is_possible = True if building["data-status"] == "on" else False
                 in_construction = True if building["data-status"] == "active" else False
+                construction_finished_in_seconds = int(building["data-total"]) if in_construction else 0
                 self.buildings[building['aria-label']] = Building(building['aria-label'],
                                                                   building['data-technology'],
                                                                   level[0], "supplies", is_possible,
-                                                                  in_construction, self)
+                                                                  in_construction, construction_finished_in_seconds,
+                                                                  self)
         #####
         # Facility Buildings
         #####
@@ -94,10 +117,12 @@ class Planet:
             for building in result.findAll("li", {"class": "technology"}):
                 is_possible = True if 'data-status="on"' in building else False
                 in_construction = True if 'data-status="active"' in building else False
+                construction_finished_in_seconds = int(building["data-total"]) if in_construction else 0
                 self.buildings[building['aria-label']] = Building(building['aria-label'],
                                                                   building['data-technology'],
                                                                   building.text, "facilities", is_possible,
-                                                                  in_construction, self)
+                                                                  in_construction, construction_finished_in_seconds,
+                                                                  self)
 
         #####
         # Ships (on the Planet)
@@ -129,38 +154,7 @@ class Planet:
         for building in self.buildings:
             self.buildings[building].set_construction_cost()
             self.buildings[building].set_construction_time()
+            # print(self.name,self.buildings[building].name,self.buildings[building].level,self.buildings[building].construction_finished_in_seconds)
 
     def __repr__(self):
         return self.name + " id:" + str(self.id)
-
-    def get_ships(self, id):
-        response = self.session.get('https://s{}-{}.ogame.gameforge.com/game/index.php?page=ingame&'
-                                    'component=shipyard&cp={}'
-                                    .format(self.server_number, self.server_language, id)).text
-        marker_string = '''class="amount"
-                  data-value="'''
-
-        class ships_amount(object):
-            ships_amount = []
-            for re_obj in re.finditer(marker_string.format(marker_string), response):
-                ships_amount.append(int(response[re_obj.start() + len(marker_string):
-                                                 re_obj.end() + 10].split('"')[0]))
-            light_fighter = ships_amount[0]
-            heavy_fighter = ships_amount[1]
-            cruiser = ships_amount[2]
-            battleship = ships_amount[3]
-            interceptor = ships_amount[4]
-            bomber = ships_amount[5]
-            destroyer = ships_amount[6]
-            deathstar = ships_amount[7]
-            reaper = ships_amount[8]
-            explorer = ships_amount[9]
-            small_transporter = ships_amount[10]
-            large_transporter = ships_amount[11]
-            colonyShip = ships_amount[12]
-            recycler = ships_amount[13]
-            espionage_probe = ships_amount[14]
-            solarSatellite = ships_amount[15]
-            crawler = ships_amount[16]
-
-        return ships_amount

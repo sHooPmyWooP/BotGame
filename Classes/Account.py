@@ -1,8 +1,10 @@
 import re
-import random
+
 import requests
 from bs4 import BeautifulSoup
 
+from Classes.Message import SpyMessage
+from Classes.OGame_API import OGameAPI
 from Classes.Planet import Planet
 from Classes.Research import Research
 
@@ -25,6 +27,8 @@ class Account:
         self.server_settings = {}
         self.planets = []
         self.research = {}
+        self.ogame_api = None
+        self.spy_messages = {}
 
         if user_agent is None:
             user_agent = {
@@ -37,6 +41,7 @@ class Account:
         self.login()
 
     def login(self):
+        self.planets = []  # planets get appended to the list
         print("Start login...")
         form_data = {'kid': '',
                      'language': 'en',
@@ -70,8 +75,9 @@ class Account:
                 for key in server["settings"]:
                     self.server_settings[key] = server["settings"][key]
                 break
+        self.get_ogame_api()  # API to get Players/Planets
 
-        # Add planets to PlanetList
+        # create Planets
         for id in self.get_planet_ids():
             self.planets.append(Planet(self, id))
 
@@ -87,11 +93,8 @@ class Account:
                 in_construction = True if 'data-status="active"' in research else False
                 level_str_list = re.findall('\d+', research.text)  # avoid problem with Bonus (4+3)
                 level_sum = sum([int(val) for val in level_str_list])  # sum up vals from list ['4','3']
-                self.research[research['aria-label']] = Research(name=research['aria-label'],
-                                                                 id=research['data-technology'],
-                                                                 level=level_sum,
-                                                                 is_possible=is_possible,
-                                                                 in_construction=in_construction)
+                self.research[research['aria-label']] = Research(research['aria-label'], research['data-technology'],
+                                                                 level_sum, is_possible, in_construction)
 
     def get_planet_ids(self):
         planet_ids = []
@@ -111,7 +114,25 @@ class Account:
         for re_obj in re.finditer(marker_string, content):
             self.sendfleet_token = content[re_obj.start() + len(marker_string): re_obj.end() + 35].split('"')[1]
 
+    def get_ogame_api(self):
+        self.ogame_api = OGameAPI(self.server_number, self.server_language)
+
+    def get_spy_messages(self, tab=20):
+        """
+        read messages from spy-inbox.
+        :param tab: int (Representing the OGame internal ID for different Inboxes.
+        -> 20: Spy, 21: Fight, 22: Expedition, 23: Transport, 24: Other...
+        :return: None
+        """
+        response = self.session.get(
+            f"https://s{self.server_number}-{self.server_language}.ogame.gameforge.com/game/index.php?page=messages&tab={tab}&ajax=1").text
+        soup = BeautifulSoup(response, features="html.parser")
+        for msg in soup.findAll("li", {"class": 'msg'}):
+            if msg["data-msg-id"] not in self.spy_messages:
+                self.spy_messages[msg["data-msg-id"]] = SpyMessage(msg)
 
 
-
-
+if __name__ == "__main__":
+    a1 = Account(universe="Octans", username="david-achilles@hotmail.de", password="OGame!4friends")
+    a1.get_messages(20)
+    print("Done...")
