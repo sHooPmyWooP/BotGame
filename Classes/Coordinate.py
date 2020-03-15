@@ -2,11 +2,11 @@ import enum
 
 
 class Coordinate:
-    def __init__(self):
-        self.galaxy = 0
-        self.system = 0
-        self.position = 0
-        self.destination = Destination
+    def __init__(self, galaxy, system, position, destionation):
+        self.galaxy = galaxy
+        self.system = system
+        self.position = position
+        self.destination = destionation
 
 
 class Destination(enum.Enum):
