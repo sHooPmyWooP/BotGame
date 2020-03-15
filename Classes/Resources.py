@@ -34,3 +34,6 @@ class Resources():
             self.deuterium = x
         else:
             pass
+
+    def get_resources_str(self):
+        return f"{self.metal}:{self.crystal}:{self.deuterium}"
