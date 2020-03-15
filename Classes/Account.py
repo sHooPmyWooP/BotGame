@@ -30,6 +30,7 @@ class Account:
         self.research = {}
         self.ogame_api = None
         self.spy_messages = {}
+        self.planet_ids = []
 
         if user_agent is None:
             user_agent = {
@@ -114,6 +115,7 @@ class Account:
         for planet_id in re.finditer(marker_string, self.session.content):
             id = self.session.content[planet_id.start() + 11:planet_id.end() + 8]
             planet_ids.append(int(id))
+        self.planet_ids = planet_ids
         return planet_ids
 
     def get_init_chat_token(self):

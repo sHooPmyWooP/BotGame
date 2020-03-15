@@ -3,10 +3,10 @@ import re
 from bs4 import BeautifulSoup
 
 from Classes.Building import Building
+from Classes.Coordinate import Coordinate, Destination
 from Classes.Defense import Defense
 from Classes.Resources import Resources
 from Classes.Ship import Ship
-from Classes.Coordinate import Coordinate, Destination
 
 
 class Planet:
@@ -16,7 +16,6 @@ class Planet:
 
     def __init__(self, acc, id):
         """
-
         :param acc: Account (associated with the Planet)
         :param id: int (ID of the Planet)
         self.buildings = Dict of Buildings accessible e.g. as self.buildings["Metallmine"]
@@ -89,7 +88,8 @@ class PlanetReader:
             # Fields
             for res in result.findAll("a", {"class": "planetlink"}):
                 self.planet.fields = re.search("\(\d*\/\d*\)", res["title"]).group(0).replace("(", "").replace(")",
-                                                                                                               "").split("/")
+                                                                                                               "").split(
+                    "/")
             # Temperature
             for res in result.findAll("a", {"class": "planetlink"}):
                 temp = re.search("-?\d+ °C [a-zA-Z]* -?\d+", res["title"]).group(0)
@@ -161,16 +161,54 @@ class PlanetReader:
                                                        self.planet.id)).text
         soup = BeautifulSoup(response, features="html.parser")
         for ship in soup.find_all("li", {"class": "technology"}):
+            try:
+                count = int(ship.text)
+            except ValueError:  # Ships currently build - refer to currently accessible amount
+                count = ship.text.split("\n")[-1].strip()  # get last element of list
             self.planet.ships[ship['aria-label']] = Ship(ship['aria-label'], ship['data-technology'],
-                                                         ship.text, self)
+                                                         count, self)
 
     def read_defences(self):
         response = self.planet.acc.session.get('https://s{}-{}.ogame.gameforge.com/game/index.php?page=ingame&'
-                                        'component=defenses&cp={}'
-                                        .format(self.planet.acc.server_number, self.planet.acc.server_language,
-                                                self.planet.id)).text
+                                               'component=defenses&cp={}'
+                                               .format(self.planet.acc.server_number, self.planet.acc.server_language,
+                                                       self.planet.id)).text
         soup = BeautifulSoup(response, features="html.parser")
         for result in soup.findAll("div", {"id": 'technologies'}):
             for defense in result.find_all("li", {"class": "technology"}):
                 self.planet.defenses[defense['aria-label']] = Defense(defense['aria-label'], defense['data-technology'],
                                                                       defense.text, self.planet)
+
+    def send_fleet(self, mission_id, coords, ships, resources=[0, 0, 0], speed=10, holdingtime=0):
+        response = self.planet.acc.session.get(
+            f'https://s{self.planet.acc.server_number}-{self.planet.acc.server_language}.ogame.gameforge '
+            f'.com/game/index.php?page=ingame&component=fleetdispatch&cp={self.planet.id}').text
+        self.planet.acc.get_init_sendfleetroken(self, response)
+
+        form_data = {'token': self.planet.acc.sendfleet_token}
+
+        for ship in ships:
+            ship_type = f'am{ship[0]}'
+            form_data.update({ship_type: ship[1]})
+
+        form_data.update({'galaxy': coords[0],
+                          'system': coords[1],
+                          'position': coords[2],
+                          'type': coords[3],
+                          'metal': resources[0],
+                          'crystal': resources[1],
+                          'deuterium': resources[2],
+                          'prioMetal': 1,
+                          'prioCrystal': 2,
+                          'prioDeuterium': 3,
+                          'mission': mission_id,
+                          'speed': speed,
+                          'retreatAfterDefenderRetreat': 0,
+                          'union': 0,
+                          'holdingtime': holdingtime})
+
+        response = self.session.post('https://s{}-{}.ogame.gameforge.com/game/index.php?page=ingame&'
+                                     'component=fleetdispatch&action=sendFleet&ajax=1&asJson=1'
+                                     .format(self.server_number, self.server_language), data=form_data,
+                                     headers={'X-Requested-With': 'XMLHttpRequest'}).json()
+        return response['success']

@@ -6,6 +6,8 @@ class Ship:
         self.count = count
         self.planet = planet
 
+        print(self.count)
+
     def build(self):
         """todo: add"""
         pass

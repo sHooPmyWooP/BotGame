@@ -4,8 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 from Classes.Account import Account
 
 
-def build_next(acc, planet_nr):
-    planet = acc.planets[planet_nr]
+def build_next(acc, planet):
     metall = planet.buildings["Metallmine"]
     kristall = planet.buildings["Kristallmine"]
     energy = planet.energy
@@ -63,15 +62,16 @@ def thread_building(planet):
     print("Starting Thread...")
     while True:
         # todo: before new check - update buildings & energy
+        a1.read_in_planet(planet.id)
         build_next(a1, planet)
-        a1.login()
 
 
-a1 = Account("Galatea", "nico.doehrn@gmail.com", "Ogame4Friends")
+a1 = Account("Octans", "david-achilles@hotmail.de", "OGame!4friends")
+a1.read_in_all_planets()
 
 # thread_building(2)
 with ThreadPoolExecutor() as executor:
     for i in range(len(a1.planets)):
-        executor.submit(thread_building, i)
+        executor.submit(thread_building, a1.planets[i])
 
 print("Done...")
