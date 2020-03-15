@@ -2,7 +2,7 @@ import enum
 
 
 class Coordinate:
-    def __init__(self, galaxy, system, position, destination):
+    def __init__(self, galaxy, system, position, destination=1):
         self.galaxy = galaxy
         self.system = system
         self.position = position
