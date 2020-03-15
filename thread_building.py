@@ -67,8 +67,8 @@ def thread_building(planet):
         a1.login()
 
 
-a1 = Account(universe="Octans", username="david-achilles@hotmail.de", password="OGame!4friends")
-# a1.ogame_api.push_inactive_to_db()
+a1 = Account("Galatea", "nico.doehrn@gmail.com", "Ogame4Friends")
+
 # thread_building(2)
 with ThreadPoolExecutor() as executor:
     for i in range(len(a1.planets)):
