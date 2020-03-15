@@ -92,6 +92,7 @@ class Planet:
                                          'component=fleetdispatch&action=sendFleet&ajax=1&asJson=1'
                                          .format(self.acc.server_number, self.acc.server_language), data=form_data,
                                          headers={'X-Requested-With': 'XMLHttpRequest'}).json()
+        print("Mission started:", mission_id, ships, coords)
         print(response)
         return response['success']
 

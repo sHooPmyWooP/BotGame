@@ -11,6 +11,10 @@ class Coordinate:
     def get_coord_str(self):
         return f"{self.galaxy}:{self.system}:{self.position}"
 
+    def __repr__(self):
+        return f"{self.galaxy}:{self.system}:{self.position} - {self.destination}"
+
+
 class Destination(enum.Enum):
     Planet = 1
     Moon = 2

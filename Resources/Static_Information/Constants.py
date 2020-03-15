@@ -1,4 +1,4 @@
-class mission(object):
+class mission_type_ids(object):
     attack = 1
     transport = 3
     park = 4

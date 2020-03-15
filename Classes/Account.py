@@ -137,7 +137,7 @@ class Account:
 
     def check_fleet_slots(self):
         """
-        Check if fleets slots open and when fleets will return
+        read fleet slots with mission type, date of arrival/return and if return flight
         :return:
         """
         self.read_in_mission_count()
@@ -149,19 +149,11 @@ class Account:
         for result in soup.find_all("div", {"id": "eventListWrap"}):
             for tr in result.find_all("tr", {"class": "eventFleet"}):
                 id = int(re.search("\d+", tr["id"]).group())
-                timestamp = int(tr["data-arrival-time"])
-                date_formatted = datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
-                if tr["data-return-flight"] == False:
-                    self.missions[id] = {"start": tr["data-arrival-time"],
-                                         "mission-type": int(tr["data-mission-type"]),
-                                         "returns": 0}
-                # elif tr["data-return-flight"] == "true":
-                #     id -= 1
-                #     if id not in self.missions.keys():
-                #         print("tiggered")
-                #         self.missions[id] = []
-                #     self.missions[id]["returns"] = tr["data-arrival-time"]
-        print(self.missions)
+                return_flight = True if tr["data-return-flight"] == "true" else False
+                self.missions[id] = {
+                    "timestamp_arrival": datetime.fromtimestamp(int(tr["data-arrival-time"])),
+                    "mission-type": int(tr["data-mission-type"]),
+                    "return_flight": return_flight}
 
     def read_in_all_planets(self):
         for planetId in self.get_planet_ids():
