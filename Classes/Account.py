@@ -12,6 +12,7 @@ from Classes.Research import Research
 class Account:
 
     def __init__(self, universe, username, password, user_agent=None, proxy=''):
+        # todo: get class (e.g. for expo)
         self.universe = universe
         self.username = username
         self.password = password
@@ -124,12 +125,13 @@ class Account:
         -> 20: Spy, 21: Fight, 22: Expedition, 23: Transport, 24: Other...
         :return: None
         """
+
         response = self.session.get(
             f"https://s{self.server_number}-{self.server_language}.ogame.gameforge.com/game/index.php?page=messages&tab={tab}&ajax=1").text
         soup = BeautifulSoup(response, features="html.parser")
         for msg in soup.findAll("li", {"class": 'msg'}):
             if msg["data-msg-id"] not in self.spy_messages:
-                self.spy_messages[msg["data-msg-id"]] = SpyMessage(msg)
+                self.spy_messages[msg["data-msg-id"]] = SpyMessage(self, msg)
 
 
 if __name__ == "__main__":
