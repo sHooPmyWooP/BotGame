@@ -11,11 +11,11 @@ class OGameAPI:
     """
     Interact with OGames API: http://s{server_number}-{language}.ogame.gameforge.com/api/{endpoint}
     Endpoints:
-    players.xml (1 day): Contain list of all players on the server along with their names and status.
-    alliances.xml (1 day): Contain list of all alliances on the server along with their members, name and tag.
-    serverData.xml (1 day): Contain information about server properties such as name, language, speed, debris etc.
-    universe.xml (1 week): Contain list of all planets on the server along with their names, coordinates and owners.
-    highscore.xml (1 hour): Contain statistics of various types about players and alliances on the server.
+        players.xml (1 day): Contain list of all players on the server along with their names and status.
+        alliances.xml (1 day): Contain list of all alliances on the server along with their members, name and tag.
+        serverData.xml (1 day): Contain information about server properties such as name, language, speed, debris etc.
+        universe.xml (1 week): Contain list of all planets on the server along with their names, coordinates and owners.
+        highscore.xml (1 hour): Contain statistics of various types about players and alliances on the server.
     """
 
     def __init__(self, server_number, language):
