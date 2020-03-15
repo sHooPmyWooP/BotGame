@@ -1,6 +1,7 @@
 import re
 import sqlite3
 
+from Classes.Coordinate import Coordinate
 from Classes.Resources import Resources
 
 
@@ -19,11 +20,11 @@ class Message:
         """deletes the message from the inbox"""
         form_data = {
             "messageId": self.id,
-            "action": 111,
+            "action": 103,
             "ajax": 1
         }
 
-        response = self.session.post(
+        delete = self.acc.session.post(
             f'https://s{self.acc.server_number}-{self.acc.server_language}.ogame.gameforge.com/game/index.php?page=messages',
             data=form_data)
 
@@ -35,7 +36,7 @@ class SpyMessage(Message):
         if self.msg_from == "Raumüberwachung":
             return
 
-        self.target_coords = [0, 0, 0]
+        self.target_coords = Coordinate()
         self.target_player_name = ""  # todo: Maybe not that important after all. Possibly get from Universe-API-DB with coords
         self.resources = Resources()
         self.api_key = ""
@@ -46,8 +47,10 @@ class SpyMessage(Message):
         #  Coords
         coords = re.search("\[\d+:\d+:\d+\]", msg_title.find("a").text).group(0)
         coord = coords.split(":")
+        target_coords = [0, 0, 0]
         for i, x in enumerate(coord):
-            self.target_coords[i] = x.replace("[", "").replace("]", "")
+            target_coords[i] = x.replace("[", "").replace("]", "")
+        self.target_coords = Coordinate(target_coords[0], target_coords[1], target_coords[2])
 
         #  Resources
         resspan = msg.findAll("span", {"class": "resspan"})
@@ -96,18 +99,18 @@ class SpyMessage(Message):
         c = conn.cursor()
         c.execute("""
         CREATE TABLE IF NOT EXISTS SPY_MESSAGES(
-        id integer,
+        id integer primary key,
         Spy_Timestmap text,
         msg_from text,
         target_coords text,
-        target_player_name text,
         resources text,
         api_key text);
         """)
 
-        statement = "INSERT OR REPLACE INTO 'SPY_MESSAGES' VALUES (?, ?, ?,?,?, ?, ?);"
-        tuple = (self.id, self.timestamp, self.msg_from, self.target_coords, self.target_player_name, self.resources,
-                 self.api_key)
+        statement = "INSERT OR REPLACE INTO 'SPY_MESSAGES' VALUES (?, ?, ?,?, ?, ?);"
+        tuple = (
+        self.id, self.timestamp, self.msg_from, self.target_coords.get_coord_str(), self.resources.get_resources_str(),
+        self.api_key)
         c.execute(statement, tuple)
         conn.commit()
         conn.close()
