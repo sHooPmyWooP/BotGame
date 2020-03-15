@@ -1,4 +1,5 @@
 import re
+from datetime import datetime
 
 import requests
 from bs4 import BeautifulSoup
@@ -31,6 +32,10 @@ class Account:
         self.ogame_api = None
         self.spy_messages = {}
         self.planet_ids = []
+        self.expo_count = [0, 0]  # current/max
+        self.fleet_count = [0, 0]  # current/max
+        self.offers_count = [0, 0]  # current/max
+        self.missions = {}  # mission id +1 for return flight
 
         if user_agent is None:
             user_agent = {
@@ -38,7 +43,6 @@ class Account:
                     'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) '
                     'Chrome/80.0.3987.100 Mobile Safari/537.36'}
         self.session.headers.update(user_agent)
-        self.universes = []
 
         self.login()
 
@@ -96,6 +100,68 @@ class Account:
                                                                  level=level_sum,
                                                                  is_possible=is_possible,
                                                                  in_construction=in_construction)
+
+    def read_in_mission_count(self):
+        response = self.session.get(
+            f'https://s{self.server_number}-{self.server_language}.ogame.gameforge.com/game/index.php?page=ingame&component=fleetdispatch').text  # &cp={self.planets[0].id entfernt
+        soup = BeautifulSoup(response, features="html.parser")
+        for result in soup.findAll("div", {"class": 'fleetStatus'}):
+            for span in result.find_all("span"):
+                #  Fleet
+                marker_string_fleet = "Flotten:((?s).*)\d+/\d+"  # (?s) to match newlines as well
+                regex_fleet = re.search(marker_string_fleet, str(span))
+                try:
+                    fleet_list = re.findall("\d+", regex_fleet.group(0))
+                    self.fleet_count[0] = int(fleet_list[0])
+                    self.fleet_count[1] = int(fleet_list[1])
+                except AttributeError:  # this is not the span we're looking for
+                    pass
+                #  Expo
+                marker_string_expo = "Expeditionen:((?s).*)\d+/\d+"  # (?s) to match newlines as well
+                regex_expo = re.search(marker_string_expo, str(span))
+                try:
+                    expo_list = re.findall("\d+", regex_expo.group(0))
+                    self.expo_count[0] = int(expo_list[0])
+                    self.expo_count[1] = int(expo_list[1])
+                except AttributeError:  # this is not the span we're looking for
+                    pass
+                #  Offers
+                marker_string_offers = "Angebote:((?s).*)\d+/\d+"  # (?s) to match newlines as well
+                regex_offers = re.search(marker_string_offers, str(span))
+                try:
+                    offers_list = re.findall("\d+", regex_offers.group(0))
+                    self.offers_count[0] = int(offers_list[0])
+                    self.offers_count[1] = int(offers_list[1])
+                except AttributeError:  # this is not the span we're looking for
+                    pass
+
+    def check_fleet_slots(self):
+        """
+        Check if fleets slots open and when fleets will return
+        :return:
+        """
+        self.read_in_mission_count()
+        response = self.session.get(
+            f'https://s{self.server_number}-{self.server_language}.ogame.gameforge.com/game/index.php?page=ingame&component=movement').text
+        soup = BeautifulSoup(response, features="html.parser")
+
+        self.missions = {}
+        for result in soup.find_all("div", {"id": "eventListWrap"}):
+            for tr in result.find_all("tr", {"class": "eventFleet"}):
+                id = int(re.search("\d+", tr["id"]).group())
+                timestamp = int(tr["data-arrival-time"])
+                date_formatted = datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
+                if tr["data-return-flight"] == False:
+                    self.missions[id] = {"start": tr["data-arrival-time"],
+                                         "mission-type": int(tr["data-mission-type"]),
+                                         "returns": 0}
+                # elif tr["data-return-flight"] == "true":
+                #     id -= 1
+                #     if id not in self.missions.keys():
+                #         print("tiggered")
+                #         self.missions[id] = []
+                #     self.missions[id]["returns"] = tr["data-arrival-time"]
+        print(self.missions)
 
     def read_in_all_planets(self):
         for planetId in self.get_planet_ids():

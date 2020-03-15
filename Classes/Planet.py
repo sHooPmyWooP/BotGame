@@ -34,7 +34,7 @@ class Planet:
         self.id = id
         self.coordinates = Coordinate(0, 0, 0, Destination.Planet)
         self.fields = [0, 0]  # used / total
-        self.temps = []  # min / max
+        self.temperature = []  # min / max
         self.resources = Resources()
         self.energy = 0
         self.name = ""
@@ -53,6 +53,15 @@ class Planet:
         return self.name + " id:" + str(self.id)
 
     def send_fleet(self, mission_id, coords, ships, resources=[0, 0, 0], speed=10, holdingtime=0):
+        """
+        :param mission_id:
+        :param coords:
+        :param ships: [[id,amount],[id,amount]]
+        :param resources: int
+        :param speed: int
+        :param holdingtime: int # min 1 for expedition
+        :return:
+        """
         # ships = [["Ship_Name", "Amount"],...]
         response = self.acc.session.get(
             f'https://s{self.acc.server_number}-{self.acc.server_language}.ogame.gameforge.com/game/index.php?page=ingame&component=fleetdispatch&cp={self.id}').text
@@ -63,7 +72,6 @@ class Planet:
             ship_type = f'am{ship[0]}'
             ship_amount = ship[1]
             form_data.update({ship_type: ship_amount})
-            print(ship_type, ship_amount)
 
         form_data.update({'galaxy': coords.galaxy,
                           'system': coords.system,
@@ -80,13 +88,13 @@ class Planet:
                           'retreatAfterDefenderRetreat': 0,
                           'union': 0,
                           'holdingtime': holdingtime})
-        print(form_data)
         response = self.acc.session.post('https://s{}-{}.ogame.gameforge.com/game/index.php?page=ingame&'
                                          'component=fleetdispatch&action=sendFleet&ajax=1&asJson=1'
                                          .format(self.acc.server_number, self.acc.server_language), data=form_data,
                                          headers={'X-Requested-With': 'XMLHttpRequest'}).json()
         print(response)
         return response['success']
+
 
 class PlanetReader:
     def __init__(self, planet):
@@ -179,12 +187,14 @@ class PlanetReader:
         soup = BeautifulSoup(response, features="html.parser")
         for result in soup.findAll("div", {"id": 'technologies'}):
             for building in result.findAll("li", {"class": "technology"}):
+                level_list = building.text.strip().split(" ")
+                level = [x.replace(r"\n", "") for x in level_list]
                 is_possible = True if 'data-status="on"' in building else False
                 in_construction = True if 'data-status="active"' in building else False
                 construction_finished_in_seconds = int(building["data-total"]) if in_construction else 0
                 self.planet.buildings[building['aria-label']] = Building(building['aria-label'],
                                                                          building['data-technology'],
-                                                                         building.text, "facilities", is_possible,
+                                                                         level, "facilities", is_possible,
                                                                          in_construction,
                                                                          construction_finished_in_seconds,
                                                                          self.planet)
@@ -213,5 +223,3 @@ class PlanetReader:
             for defense in result.find_all("li", {"class": "technology"}):
                 self.planet.defenses[defense['aria-label']] = Defense(defense['aria-label'], defense['data-technology'],
                                                                       defense.text, self.planet)
-
-
