@@ -1,3 +1,4 @@
+import datetime
 import re
 
 from Classes.Resources import Resources
@@ -70,7 +71,7 @@ class Building:
                     try:
                         self.energy_consumption_total = (base_energy * self.level * energy_factor ** self.level)
                         self.energy_consumption_nxt_level = (base_energy * (self.level + 1) * energy_factor ** (
-                                    self.level + 1)) - self.energy_consumption_total
+                                self.level + 1)) - self.energy_consumption_total
                     except ZeroDivisionError:
                         self.energy_consumption_total = 0
                         self.energy_consumption_nxt_level = 0
@@ -94,9 +95,11 @@ class Building:
             .format(self.planet.acc.server_number, self.planet.acc.server_language, component,
                     self.planet.acc.build_token, type, amount)
         response = self.planet.acc.session.get(build_url)
-        print(self.name + " has been built on " + self.planet.name + " sleep for " + str(self.construction_time))
         self.set_construction_cost()
         self.set_construction_time()
+        print(self.name + " has been built on " + self.planet.name + " " + str(self.level) + " to " + str(
+            self.level + 1) + " sleep until " + str(
+            datetime.datetime.now() + datetime.timedelta(0, self.construction_time)))
         self.level += 1
 
     def get_init_build_token(self, content, component):

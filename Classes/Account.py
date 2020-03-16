@@ -165,7 +165,9 @@ class Account:
     def read_in_planet(self, planetId):
         planet = Planet(self, planetId)
         planet.reader.read_all()
-        return self.planets.append(planet)
+        self.planets.append(planet)
+        print('Planet ' + planet.name + ' with id ' + str(planet.id) + ' was added')
+        return planet  # hier nur append returnen? - Notiz falls Fehler auftreten
 
     def get_planet_ids(self):
         planet_ids = []

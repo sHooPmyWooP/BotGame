@@ -47,29 +47,28 @@ class Planet:
         for building in self.buildings:
             self.buildings[building].set_construction_cost()
             self.buildings[building].set_construction_time()
-            # print(self.name,self.buildings[building].name,self.buildings[building].level,self.buildings[building].construction_finished_in_seconds)
+            print(self.name, self.buildings[building].name, self.buildings[building].level,
+                  self.buildings[building].construction_finished_in_seconds)
 
     def __repr__(self):
         return self.name + " id:" + str(self.id)
 
     def send_fleet(self, mission_id, coords, ships, resources=[0, 0, 0], speed=10, holdingtime=0):
         """
-        :param mission_id:
-        :param coords:
-        :param ships: [[id,amount],[id,amount]]
+        :param mission_id: type of mission
+        :param coords: Coordinate()
+        :param ships: [[Ship,amount],[Ship,amount]]
         :param resources: int
         :param speed: int
-        :param holdingtime: int # min 1 for expedition
-        :return:
+        :param holdingtime: int (1 for expeditions)
         """
-        # ships = [["Ship_Name", "Amount"],...]
         response = self.acc.session.get(
             f'https://s{self.acc.server_number}-{self.acc.server_language}.ogame.gameforge.com/game/index.php?page=ingame&component=fleetdispatch&cp={self.id}').text
         self.acc.get_init_sendfleet_token(response)
         form_data = {'token': self.acc.sendfleet_token}
 
         for ship in ships:
-            ship_type = f'am{ship[0]}'
+            ship_type = f'am{ship[0].id}'  # e.g. am201 is the OGame Format
             ship_amount = ship[1]
             form_data.update({ship_type: ship_amount})
 
@@ -92,7 +91,8 @@ class Planet:
                                          'component=fleetdispatch&action=sendFleet&ajax=1&asJson=1'
                                          .format(self.acc.server_number, self.acc.server_language), data=form_data,
                                          headers={'X-Requested-With': 'XMLHttpRequest'}).json()
-        print("Mission started:", mission_id, ships, coords)
+        print("Mission started:", mission_id,
+              ["ship:" + str(ship[0].name) + " amount:" + str(ship[1]) for ship in ships], coords)
         print(response)
         return response['success']
 
@@ -108,6 +108,9 @@ class PlanetReader:
         self.read_facility_buildings()
         self.read_fleet()
         self.read_defences()
+        for building in self.planet.buildings:
+            self.planet.buildings[building].set_construction_cost()
+            self.planet.buildings[building].set_construction_time()
 
     def read_planet_infos(self):
         response = self.planet.acc.session.get('https://s{}-{}.ogame.gameforge.com/game/index.php?'
@@ -144,15 +147,27 @@ class PlanetReader:
         response = self.planet.acc.session.get(
             'https://s{}-{}.ogame.gameforge.com/game/index.php?page=resourceSettings&cp={}'
                 .format(self.planet.acc.server_number, self.planet.acc.server_language, self.planet.id)).text
-
         resources_names = ['metal', 'crystal', 'deuterium']
+        # soup = BeautifulSoup(response, features="html.parser")
+
         for name in resources_names:
-            marker_string = '<span id="resources_{}" data-raw='.format(name)
+            marker_string = '<span id="resources_{}" data-raw="\d+'.format(name)
             try:
-                value = int(response.split(marker_string)[1].split('>')[1].split('<')[0].split(',')[0].replace('.', ''))
+                # print_st = soup.find("li",{"id":name+"_box"})
+                # res = re.search("Lagerkapazität:((?s).*)\d+.?\d+",str(print_st))
+                # print("regex",res.group(0))
+                # soup_res = BeautifulSoup(print_st, features="html.parser")
+                # for lager in soup_res.find_all("span",{"class":"overmark"}):
+                #     print(lager)
+                # marker_string2 =
+                # print(print_st)
+                value_string = re.search(marker_string, response).group(0)  # <span id="resources_{}" data-raw=12345
+                value = int(re.search("\d+", value_string).group(0))  # 12345
+                # value = int(response.split(marker_string)[1].split('>')[1].split('<')[0].split(',')[0].replace('.', ''))
                 self.planet.resources.set_value(value, name)
-            except IndexError:
-                print(self.planet.name, name)
+            except IndexError as e:
+                print(response)
+                print(self.planet.name, name, e)
                 pass  # Resource-Value = 0 and therefor not in string
         # Energy
         marker_string = '<span id="resources_energy" data-raw='

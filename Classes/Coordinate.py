@@ -12,7 +12,7 @@ class Coordinate:
         return f"{self.galaxy}:{self.system}:{self.position}"
 
     def __repr__(self):
-        return f"{self.galaxy}:{self.system}:{self.position} - {self.destination}"
+        return f"{self.galaxy}:{self.system}:{self.position}-{self.destination}"
 
 
 class Destination(enum.Enum):
