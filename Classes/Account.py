@@ -178,6 +178,10 @@ class Account:
         self.planet_ids = planet_ids
         return planet_ids
 
+    def read_in_all_fleets(self):
+        for planet in self.planets:
+            planet.reader.read_fleet()
+
     def get_init_chat_token(self):
         marker_string = 'var ajaxChatToken = '
         for re_obj in re.finditer(marker_string, self.session.content):
