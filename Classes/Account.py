@@ -4,6 +4,7 @@ from datetime import datetime
 import requests
 from bs4 import BeautifulSoup
 
+from Classes.Coordinate import Coordinate
 from Classes.Message import SpyMessage
 from Classes.OGame_API import OGameAPI
 from Classes.Planet import Planet
@@ -235,8 +236,58 @@ class Account:
         self.session.get('https://s{}-{}.ogame.gameforge.com/game/index.php?page=logout'
                          .format(self.server_number, self.server_language))
 
+    def get_fleet(self):
+        fleets_list = []
+        response = self.session.get('https://s{}-{}.ogame.gameforge.com/game/index.php?'
+                                    'page=componentOnly&component=eventList&action=fetchEventBox&ajax=1&asJson=1'
+                                    .format(self.server_number, self.server_language),
+                                    headers={'X-Requested-With': 'XMLHttpRequest'}).json()
+        if response['friendly'] != 0:
+            response = self.session.get('https://s{}-{}.ogame.gameforge.com/game/index.php?page=ingame&'
+                                        'component=movement'
+                                        .format(self.server_number, self.server_language)).text
+
+            events = response.split('class="fleetinfo"')
+            del events[0]
+            fleets = response.split('<div id="fleet')
+            del fleets[0]
+
+            for fleet, event in zip(fleets, events):
+                fleet_id = int(fleet[0:30].split('"')[0])
+                fleet_info = event.split('</table>')[0].split('<td')
+                del fleet_info[0]
+                remove_chars = ['>', "\n", ' ', ':</td', 'class="value"', '</td</tr<tr', '0</td</tr', '</td</tr',
+                                ':</th</tr<tr', 'colspan="2"&nbsp;<thcolspan="2"']
+                for char in remove_chars:
+                    fleet_info = [s.replace(char, '') for s in fleet_info]
+                try:
+                    fleet_info.remove('')
+                except:
+                    pass
+
+                marker = fleet.find('data-mission-type="')
+                fleet_mission = int(fleet[marker + 19: marker + 22].split('"')[0])
+
+                if 'data-return-flight="1"' in fleet:
+                    fleet_return = True
+                else:
+                    fleet_return = False
+
+                marker = fleet.find('<span class="timer tooltip" title="')
+                fleet_arrival = datetime.strptime(fleet[marker + 35: marker + 54], '%d.%m.%Y %H:%M:%S')
+
+                marker = fleet.find('<span class="originCoords tooltip" title="')
+                origin_raw = fleet[marker: marker + 180]
+                origin_list = origin_raw.split('[')[1].split(']')[0].split(':')
+                fleet_origin = Coordinate(origin_list[0], origin_list[1], origin_list[2])
+                marker = fleet.find('<span class="destinationCoords')
+                destination_raw = fleet[marker: marker + 200]
+                destination_list = destination_raw.split('[')[1].split(']')[0].split(':')
+                fleet_destination = Coordinate(destination_list[0], destination_list[1], destination_list[2])
+
+
 if __name__ == "__main__":
     a1 = Account(universe="Octans", username="david-achilles@hotmail.de", password="OGame!4friends")
 
-    print(a1.chk_get_attacked())
+    print(a1.get_fleet())
     print("Done...")
