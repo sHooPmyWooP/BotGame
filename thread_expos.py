@@ -74,7 +74,9 @@ class Expedition:
             planet_t_count.append([planet, big_t.count * 12 + small_t.count * 4])
         planet_t_count_sorted = sorted(planet_t_count, key=lambda x: (x[1], x[1]), reverse=True)
         print("planet_t_count_sorted", planet_t_count_sorted)
-        print("Mission from:", planet_t_count_sorted[0][0].name, "BT:", big_t.count, "ST:", small_t.count)
+        print("Mission from:", planet_t_count_sorted[0][0].name, "BT:",
+              planet_t_count_sorted[0][0].ships["Großer Transporter"].count, "ST:",
+              planet_t_count_sorted[0][0].ships["Kleiner Transporter"].count)
         return planet_t_count_sorted[0][0]
 
     def thread_expos(self):
@@ -84,9 +86,10 @@ class Expedition:
                 self.possible_expos = 1
                 self.acc.login()
                 self.acc.read_in_all_planets()
+                print("")
+                if not self.chk_for_open_slot():
+                    raise AssertionError("No slot available yet, sleeping")
                 while self.possible_expos > 0 and self.possible_fleets > 0:
-                    if not self.chk_for_open_slot():
-                        raise AssertionError("No slot available yet, sleeping")
                     self.acc.read_in_all_fleets()
                     planet = self.get_planet_for_expo()
                     self.start_expo(planet)
@@ -94,6 +97,7 @@ class Expedition:
                 print("Connection failed...", e)
                 sleep(60)
             except AssertionError:
+                print("AssError")
                 pass
 
 

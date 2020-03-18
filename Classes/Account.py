@@ -210,8 +210,29 @@ class Account:
             if msg["data-msg-id"] not in self.spy_messages:
                 self.spy_messages[msg["data-msg-id"]] = SpyMessage(self, msg)
 
+    def chk_get_attacked(self):
+        response = self.session.post('https://s{}-{}.ogame.gameforge.com/game/index.php?'
+                                     'page=componentOnly&component=eventList&action=fetchEventBox&ajax=1&asJson=1'
+                                     .format(self.server_number, self.server_language),
+                                     headers={'X-Requested-With': 'XMLHttpRequest'}).json()
+        print(response)
+        if response['hostile'] > 0:
+            return True
+        else:
+            return False
+
+    def chk_get_neutral(self):
+        response = self.session.get('https://s{}-{}.ogame.gameforge.com/game/index.php?'
+                                    'page=componentOnly&component=eventList&action=fetchEventBox&ajax=1&asJson=1'
+                                    .format(self.server_number, self.server_language),
+                                    headers={'X-Requested-With': 'XMLHttpRequest'}).json()
+        if response['neutral'] > 0:
+            return True
+        else:
+            return False
 
 if __name__ == "__main__":
     a1 = Account(universe="Octans", username="david-achilles@hotmail.de", password="OGame!4friends")
-    a1.get_messages(20)
+
+    print(a1.chk_get_attacked())
     print("Done...")
