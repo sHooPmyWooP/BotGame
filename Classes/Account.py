@@ -231,6 +231,10 @@ class Account:
         else:
             return False
 
+    def logout(self):
+        self.session.get('https://s{}-{}.ogame.gameforge.com/game/index.php?page=logout'
+                         .format(self.server_number, self.server_language))
+
 if __name__ == "__main__":
     a1 = Account(universe="Octans", username="david-achilles@hotmail.de", password="OGame!4friends")
 

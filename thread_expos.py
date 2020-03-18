@@ -1,4 +1,5 @@
 import datetime
+import random
 from time import sleep
 
 import pause
@@ -22,13 +23,15 @@ class Expedition:
 
         big_t_threshold = min(50, big_t.count)  # safety threshold to keep on planet
 
-        big_t_count = max(min(int(big_t.count - big_t_threshold / (self.possible_expos * 1.5)), 250), 0)
-        small_t_count = max(int(small_t.count / self.possible_expos), 0)
-        pathfinder_count = max(min(int(pathfinder.count / (self.possible_expos * 1.5)), 1), 0)
+        big_t_count = max(min(int((big_t.count - big_t_threshold) / (self.possible_expos * 1.5)), 250), 0)
+        small_t_count = int(small_t.count / self.possible_expos)
+        pathfinder_count = int(pathfinder.count / self.possible_expos)
+
+        random_system = random.randint(planet.coordinates.system - 5, planet.coordinates.system + 5)
 
         ships = [[big_t, big_t_count], [small_t, small_t_count], [pathfinder, pathfinder_count]]
         response = planet.send_fleet(mission_type_ids.expedition,
-                                     Coordinate(planet.coordinates.galaxy, planet.coordinates.system, 16), ships,
+                                     Coordinate(planet.coordinates.galaxy, random_system, 16), ships,
                                      resources=[0, 0, 0], speed=10,
                                      holdingtime=1)
 
@@ -65,18 +68,14 @@ class Expedition:
 
     def get_planet_for_expo(self):
         planet_t_count = []
-        print(self.acc.planets)
         for i in range(len(self.acc.planets)):
             planet = self.acc.planets[i]
             ships = planet.ships
             big_t = ships["Großer Transporter"]
             small_t = ships["Kleiner Transporter"]
-            planet_t_count.append([planet, big_t.count * 12 + small_t.count * 4])
+            pathfinder = ships["Pathfinder"]
+            planet_t_count.append([planet, big_t.count * 12 + small_t.count * 4 + pathfinder.count * 31])
         planet_t_count_sorted = sorted(planet_t_count, key=lambda x: (x[1], x[1]), reverse=True)
-        print("planet_t_count_sorted", planet_t_count_sorted)
-        print("Mission from:", planet_t_count_sorted[0][0].name, "BT:",
-              planet_t_count_sorted[0][0].ships["Großer Transporter"].count, "ST:",
-              planet_t_count_sorted[0][0].ships["Kleiner Transporter"].count)
         return planet_t_count_sorted[0][0]
 
     def thread_expos(self):
@@ -84,12 +83,12 @@ class Expedition:
         while True:
             try:
                 self.possible_expos = 1
+                self.possible_fleets = 1
                 self.acc.login()
                 self.acc.read_in_all_planets()
-                print("")
-                if not self.chk_for_open_slot():
-                    raise AssertionError("No slot available yet, sleeping")
                 while self.possible_expos > 0 and self.possible_fleets > 0:
+                    if not self.chk_for_open_slot():
+                        raise AssertionError("No slot available yet, sleeping")
                     self.acc.read_in_all_fleets()
                     planet = self.get_planet_for_expo()
                     self.start_expo(planet)
@@ -98,6 +97,9 @@ class Expedition:
                 sleep(60)
             except AssertionError:
                 print("AssError")
+                pass
+            except Exception as e:
+                print(e)
                 pass
 
 
