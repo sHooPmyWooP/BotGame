@@ -53,6 +53,29 @@ class Planet:
     def __repr__(self):
         return self.name + " id:" + str(self.id)
 
+    def build_defense_routine(self, multiplier=1):
+        """
+        :param multiplier:
+        :return:
+        """
+
+        if self.defenses["Kleine Schildkuppel"].count is 0 and self.defenses["Kleine Schildkuppel"].read_max_build():
+            self.defenses["Kleine Schildkuppel"].build(1)
+
+        if self.defenses["Große Schildkuppel"].count is 0 and self.defenses["Große Schildkuppel"].read_max_build():
+            self.defenses["Große Schildkuppel"].build(1)
+
+        path_defense_routine = r'Resources/BuildOrders/Defense_Routine'
+        with open(path_defense_routine, "r", encoding="utf-8") as f:
+            next(f)
+            for line in f:
+                line = line.split("|")
+                if self.defenses[line[0]].read_max_build():
+                    if int(line[1] * multiplier) <= self.defenses[line[0]].max_build:
+                        self.defenses[line[0]].build(int(line[1] * multiplier))
+                    else:
+                        self.defenses[line[0]].build(self.defenses[line[0]].max_build)
+
     def send_fleet(self, mission_id, coords, ships, resources=[0, 0, 0], speed=10, holdingtime=0):
         """
         :param mission_id: type of mission
@@ -91,8 +114,9 @@ class Planet:
                                          'component=fleetdispatch&action=sendFleet&ajax=1&asJson=1'
                                          .format(self.acc.server_number, self.acc.server_language), data=form_data,
                                          headers={'X-Requested-With': 'XMLHttpRequest'}).json()
-        print(self.name, "Mission started:", mission_id,
-              ["ship:" + str(ship[0].name) + " amount:" + str(ship[1]) for ship in ships], coords)
+        if response["success"]:
+            print(self.name, "Mission started:", mission_id,
+                  ["ship:" + str(ship[0].name) + " amount:" + str(ship[1]) for ship in ships], coords)
         return response
 
 

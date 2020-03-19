@@ -15,6 +15,7 @@ class Expedition:
         self.acc = acc
         self.possible_expos = 0
         self.possible_fleets = 0
+        self.fleet_gestartet = False
 
     def start_expo(self, planet):
         big_t = planet.ships["Großer Transporter"]
@@ -23,7 +24,7 @@ class Expedition:
 
         big_t_threshold = min(50, big_t.count)  # safety threshold to keep on planet
 
-        big_t_count = max(min(int((big_t.count - big_t_threshold) / (self.possible_expos * 1.5)), 250), 0)
+        big_t_count = max(min(int((big_t.count - big_t_threshold) / (self.possible_expos * 1)), 250), 0)
         small_t_count = int(small_t.count / self.possible_expos)
         pathfinder_count = int(pathfinder.count / self.possible_expos)
 
@@ -37,12 +38,13 @@ class Expedition:
 
         if not response['success']:
             print(response["errors"])
-            return
+            if response["errors"][0]["error"] == 4028:  # message = 'Nicht genügend Treibstoff'
+                raise ArithmeticError
 
         if response['success']:
-            print("Mission started")
             self.possible_expos -= 1
             self.possible_fleets -= 1
+            self.fleet_gestartet = True
 
     def chk_for_open_slot(self):
         self.acc.check_fleet_slots()
@@ -76,12 +78,14 @@ class Expedition:
             pathfinder = ships["Pathfinder"]
             planet_t_count.append([planet, big_t.count * 12 + small_t.count * 4 + pathfinder.count * 31])
         planet_t_count_sorted = sorted(planet_t_count, key=lambda x: (x[1], x[1]), reverse=True)
-        return planet_t_count_sorted[0][0]
+        return planet_t_count_sorted
 
     def thread_expos(self):
         print("Starting Thread...")
         while True:
             try:
+                i = 0
+                self.fleet_gestartet = False
                 self.possible_expos = 1
                 self.possible_fleets = 1
                 self.acc.login()
@@ -90,8 +94,15 @@ class Expedition:
                     if not self.chk_for_open_slot():
                         raise AssertionError("No slot available yet, sleeping")
                     self.acc.read_in_all_fleets()
-                    planet = self.get_planet_for_expo()
-                    self.start_expo(planet)
+                    planets = self.get_planet_for_expo()
+                    self.fleet_gestartet = False
+                    while not self.fleet_gestartet:
+                        try:
+                            self.start_expo(planets[i][0])
+                        except ArithmeticError as e:
+                            i += 1
+                            print("Not enough Deuterium! Trying next: ", planets[i][0].name)
+                            pass
             except ConnectionError as e:
                 print("Connection failed...", e)
                 sleep(60)
@@ -107,7 +118,6 @@ a1 = Account("Octans", "david-achilles@hotmail.de", "OGame!4friends")
 e = Expedition(a1)
 e.thread_expos()
 
-# thread_expos(a1.planets[0])
 # with ThreadPoolExecutor() as executor:
 #     expo1 = executor.submit(thread_expos, a1.planets[0])
 
