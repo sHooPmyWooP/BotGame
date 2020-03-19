@@ -29,8 +29,8 @@ def safety_module(sound=False):
                 sleep_until = datetime.datetime.now() + datetime.timedelta(0, time_to_sleep)
                 print("Sleep until:", sleep_until)
                 sleep(time_to_sleep)
-        except:
-            print("Exception! Sleeping 60 Seconds before retry.")
+        except Exception as e:
+            print("Exception! Sleeping 60 Seconds before retry.", e)
             if sound:
                 sos()
             sleep(time_to_sleep)
