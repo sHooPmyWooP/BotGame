@@ -236,8 +236,8 @@ class Account:
         self.session.get('https://s{}-{}.ogame.gameforge.com/game/index.php?page=logout'
                          .format(self.server_number, self.server_language))
 
-    def get_fleet(self):
-        fleets_list = []
+    def get_missions(self):
+        missions_list = []
         response = self.session.get('https://s{}-{}.ogame.gameforge.com/game/index.php?'
                                     'page=componentOnly&component=eventList&action=fetchEventBox&ajax=1&asJson=1'
                                     .format(self.server_number, self.server_language),

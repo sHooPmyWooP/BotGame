@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 from Classes.Building import Building
 from Classes.Coordinate import Coordinate, Destination
 from Classes.Defense import Defense
+from Classes.Moon import Moon
 from Classes.Resources import Resources
 from Classes.Ship import Ship
 
@@ -38,6 +39,7 @@ class Planet:
         self.resources = Resources()
         self.energy = 0
         self.name = ""
+        self.moon = None
 
         self.reader = PlanetReader(self)
 
@@ -58,7 +60,6 @@ class Planet:
         :param multiplier:
         :return:
         """
-
         if self.defenses["Kleine Schildkuppel"].count is 0 and self.defenses["Kleine Schildkuppel"].read_max_build():
             self.defenses["Kleine Schildkuppel"].build(1)
 
@@ -71,10 +72,36 @@ class Planet:
             for line in f:
                 line = line.split("|")
                 if self.defenses[line[0]].read_max_build():
-                    if int(line[1] * multiplier) <= self.defenses[line[0]].max_build:
+                    if int(line[1]) * multiplier <= self.defenses[line[0]].max_build:
                         self.defenses[line[0]].build(int(line[1] * multiplier))
                     else:
                         self.defenses[line[0]].build(self.defenses[line[0]].max_build)
+
+    def build_defense_by_ratio(self):
+        """
+        :return:
+        """
+        if self.defenses["Kleine Schildkuppel"].count is 0 and self.defenses["Kleine Schildkuppel"].read_max_build():
+            self.defenses["Kleine Schildkuppel"].build(1)
+
+        if self.defenses["Große Schildkuppel"].count is 0 and self.defenses["Große Schildkuppel"].read_max_build():
+            self.defenses["Große Schildkuppel"].build(1)
+
+        plasma_count = self.defenses["Plasmawerfer"].count
+
+        path_defense_routine = r'Resources/BuildOrders/Defense_Routine'
+        with open(path_defense_routine, "r", encoding="utf-8") as f:
+            next(f)
+            for line in f:
+                line = line.split("|")
+                if self.defenses[line[0]].read_max_build():  # possible to build
+                    should_be_build = plasma_count * int(line[1])
+                    if self.defenses[line[0]].count + self.defenses[
+                        line[0]].in_construction_count <= should_be_build:  # fewer count than it should be
+                        if self.defenses[line[0]].max_build <= should_be_build:
+                            self.defenses[line[0]].build(self.defenses[line[0]].max_build)  # build max possible
+                        else:
+                            self.defenses[line[0]].build(should_be_build)
 
     def send_fleet(self, mission_id, coords, ships, resources=[0, 0, 0], speed=10, holdingtime=0):
         """
@@ -164,7 +191,14 @@ class PlanetReader:
             for res in result.findAll("a", {"class": "planetlink"}):
                 temp = re.search("-?\d+ °C [a-zA-Z]* -?\d+", res["title"]).group(0)
                 temp = re.findall("-?\d+", temp)
-                self.planet.temps = temp
+                self.planet.temperature = temp
+
+            # Moon
+            try:
+                moon = result.find("a", {"class": "moonlink"})
+                self.planet.moon = Moon(self.planet, moon["data-jumpgatelevel"])
+            except TypeError:  # planet has no moon
+                pass
 
     def read_resources_and_energy(self):
         response = self.planet.acc.session.get(
@@ -176,14 +210,6 @@ class PlanetReader:
         for name in resources_names:
             marker_string = '<span id="resources_{}" data-raw="\d+'.format(name)
             try:
-                # print_st = soup.find("li",{"id":name+"_box"})
-                # res = re.search("Lagerkapazität:((?s).*)\d+.?\d+",str(print_st))
-                # print("regex",res.group(0))
-                # soup_res = BeautifulSoup(print_st, features="html.parser")
-                # for lager in soup_res.find_all("span",{"class":"overmark"}):
-                #     print(lager)
-                # marker_string2 =
-                # print(print_st)
                 value_string = re.search(marker_string, response).group(0)  # <span id="resources_{}" data-raw=12345
                 value = int(re.search("\d+", value_string).group(0))  # 12345
                 # value = int(response.split(marker_string)[1].split('>')[1].split('<')[0].split(',')[0].replace('.', ''))
@@ -262,3 +288,29 @@ class PlanetReader:
             for defense in result.find_all("li", {"class": "technology"}):
                 self.planet.defenses[defense['aria-label']] = Defense(defense['aria-label'], defense['data-technology'],
                                                                       defense.text, self.planet)
+        queue = soup.find("table", {"class": "queue"})
+
+        # Building Queue
+        try:
+            for defense in queue.find_all("td"):
+                img = defense.find("img")
+                self.planet.defenses[img["title"]].set_in_construction_count(defense.text.strip())
+        except AttributeError as e:
+            pass
+
+        # Currently Building
+        try:
+            active = soup.find("table", {"class": "construction active"})
+            active_name = active.find("th", {"colspan": "2"})
+            active_construction = soup.find("div", {"class": "shipSumCount"})
+            self.planet.defenses[active_name.contents[0]].in_construction_count += int(active_construction.text)
+        except AttributeError as e:
+            pass
+
+        def get_moon(self):
+            moon_ids = []
+            marker_string = 'data-jumpgateLevel'
+            for planet_id in re.finditer(marker_string, self.session.content):
+                id = self.session.content[planet_id.start() - 41:planet_id.end() - 51]
+                moon_ids.append(int(id))
+            return moon_ids

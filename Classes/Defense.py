@@ -17,6 +17,10 @@ class Defense:
         self.count = count
         self.planet = planet
         self.max_build = 0
+        self.in_construction_count = 0
+
+    def __repr__(self):
+        return self.name + " count:" + str(self.count)
 
     def build(self, amount=1):
         """
@@ -56,3 +60,6 @@ class Defense:
         marker_string = 'component=defenses&modus=1&token='
         for re_obj in re.finditer(marker_string, content):
             self.planet.acc.build_token = content[re_obj.start() + len(marker_string): re_obj.end() + 32]
+
+    def set_in_construction_count(self, construction_count):
+        self.in_construction_count = int(construction_count)

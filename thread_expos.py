@@ -18,6 +18,7 @@ class Expedition:
         self.fleet_gestartet = False
 
     def start_expo(self, planet):
+        ship_sum = 0
         big_t = planet.ships["Großer Transporter"]
         small_t = planet.ships["Kleiner Transporter"]
         pathfinder = planet.ships["Pathfinder"]
@@ -31,10 +32,16 @@ class Expedition:
         random_system = random.randint(planet.coordinates.system - 5, planet.coordinates.system + 5)
 
         ships = [[big_t, big_t_count], [small_t, small_t_count], [pathfinder, pathfinder_count]]
-        response = planet.send_fleet(mission_type_ids.expedition,
-                                     Coordinate(planet.coordinates.galaxy, random_system, 16), ships,
-                                     resources=[0, 0, 0], speed=10,
-                                     holdingtime=1)
+        for i in range(len(ships)):
+            ship_sum += ships[i][1]
+
+        if ship_sum > 0:
+            response = planet.send_fleet(mission_type_ids.expedition,
+                                         Coordinate(planet.coordinates.galaxy, random_system, 16), ships,
+                                         resources=[0, 0, 0], speed=10,
+                                         holdingtime=1)
+        else:  # No ships available for expo
+            raise AttributeError
 
         if not response['success']:
             print(response["errors"])
@@ -103,6 +110,10 @@ class Expedition:
                             i += 1
                             print("Not enough Deuterium! Trying next: ", planets[i][0].name)
                             pass
+                        except AttributeError as e:
+                            print("No Ships available, sleeping 60 seconds")
+                            sleep(60)
+                            pass
             except ConnectionError as e:
                 print("Connection failed...", e)
                 sleep(60)
@@ -114,8 +125,7 @@ class Expedition:
                 pass
 
 
-a1 = Account("Octans", "david-achilles@hotmail.de", "OGame!4friends")
-e = Expedition(a1)
+e = Expedition(Account("Octans", "david-achilles@hotmail.de", "OGame!4friends"))
 e.thread_expos()
 
 # with ThreadPoolExecutor() as executor:
