@@ -29,7 +29,7 @@ def build_next(planet):
                 time.sleep(solar.construction_time)
                 return
             else:
-                print(planet.name, "kristall_energy_sleep", "energy.is_possible:", energy.is_possible)
+                print(planet.name, "kristall_energy_sleep", "energy.is_possible:", solar.is_possible)
                 time.sleep(60 * wait_factor)  # todo: calculate time until production is possible and run again
                 return
         if kristall.is_possible:
