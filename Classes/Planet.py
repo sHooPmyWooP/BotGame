@@ -279,10 +279,10 @@ class PlanetReader:
                 count = int(ship.text)
             except ValueError:  # Ships currently build - refer to currently accessible amount
                 count = ship.text.split("\n")[-1].strip()  # get last element of list
-            ship_object = self.planet.ships[ship['aria-label']] if not read_moon else self.planet.moon.ships[
-                ship['aria-label']]
-            ship_object = Ship(ship['aria-label'], ship['data-technology'],
-                               count, self)
+            # ship_object = self.planet.ships[ship['aria-label']] if not read_moon else self.planet.moon.ships[
+            #     ship['aria-label']]
+            self.planet.ships[ship['aria-label']] = Ship(ship['aria-label'], ship['data-technology'],
+                                                         count, self)
 
     def read_defences(self):
         response = self.planet.acc.session.get('https://s{}-{}.ogame.gameforge.com/game/index.php?page=ingame&'
