@@ -103,7 +103,7 @@ class Planet:
                         else:
                             self.defenses[line[0]].build(should_be_build)
 
-    def send_fleet(self, mission_id, coords, ships, resources=[0, 0, 0], speed=10, holdingtime=0):
+    def send_fleet(self, mission_id, coords, ships, resources=[0, 0, 0], speed=10, holdingtime=0, send_from_moon=False):
         """
         :param mission_id: type of mission
         :param coords: Coordinate()
@@ -112,8 +112,10 @@ class Planet:
         :param speed: int
         :param holdingtime: int (1 for expeditions)
         """
+        planet_id = self.id if not send_from_moon else self.moon.id
+
         response = self.acc.session.get(
-            f'https://s{self.acc.server_number}-{self.acc.server_language}.ogame.gameforge.com/game/index.php?page=ingame&component=fleetdispatch&cp={self.id}').text
+            f'https://s{self.acc.server_number}-{self.acc.server_language}.ogame.gameforge.com/game/index.php?page=ingame&component=fleetdispatch&cp={planet_id}').text
         self.acc.get_init_sendfleet_token(response)
         form_data = {'token': self.acc.sendfleet_token}
 
@@ -196,7 +198,8 @@ class PlanetReader:
             # Moon
             try:
                 moon = result.find("a", {"class": "moonlink"})
-                self.planet.moon = Moon(self.planet, moon["data-jumpgatelevel"])
+                moon_id = re.search("\d+", re.search("cp=\d+", moon["title"]).group(0)).group(0)
+                self.planet.moon = Moon(moon_id, self.planet, moon["data-jumpgatelevel"])
             except TypeError:  # planet has no moon
                 pass
 
@@ -264,19 +267,22 @@ class PlanetReader:
                                                                          construction_finished_in_seconds,
                                                                          self.planet)
 
-    def read_fleet(self):
+    def read_fleet(self, read_moon=False):
+        id = self.planet.id if not read_moon else self.planet.moon.id
         response = self.planet.acc.session.get('https://s{}-{}.ogame.gameforge.com/game/index.php?page=ingame&'
                                                'component=shipyard&cp={}'
                                                .format(self.planet.acc.server_number, self.planet.acc.server_language,
-                                                       self.planet.id)).text
+                                                       id)).text
         soup = BeautifulSoup(response, features="html.parser")
         for ship in soup.find_all("li", {"class": "technology"}):
             try:
                 count = int(ship.text)
             except ValueError:  # Ships currently build - refer to currently accessible amount
                 count = ship.text.split("\n")[-1].strip()  # get last element of list
-            self.planet.ships[ship['aria-label']] = Ship(ship['aria-label'], ship['data-technology'],
-                                                         count, self)
+            ship_object = self.planet.ships[ship['aria-label']] if not read_moon else self.planet.moon.ships[
+                ship['aria-label']]
+            ship_object = Ship(ship['aria-label'], ship['data-technology'],
+                               count, self)
 
     def read_defences(self):
         response = self.planet.acc.session.get('https://s{}-{}.ogame.gameforge.com/game/index.php?page=ingame&'
