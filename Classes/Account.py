@@ -1,5 +1,4 @@
 import re
-from datetime import datetime
 
 import requests
 from bs4 import BeautifulSoup
@@ -63,10 +62,14 @@ class Account:
                 self.server_number = server['number']
                 break
         accounts = self.session.get('https://lobby.ogame.gameforge.com/api/users/me/accounts').json()
-        for account in accounts:
-            if account['server']['number'] == self.server_number:
-                self.server_id = account['id']
-                self.server_language = account['server']['language']
+        try:
+            for account in accounts:
+                if account['server']['number'] == self.server_number:
+                    self.server_id = account['id']
+                    self.server_language = account['server']['language']
+        except TypeError:
+            print("No valid login information!")
+            exit()
         login_link = self.session.get('https://lobby.ogame.gameforge.com/api/users/me/loginLink?'
                                       'id={}'
                                       '&server[language]={}'
@@ -137,27 +140,6 @@ class Account:
                 except AttributeError:  # this is not the span we're looking for
                     pass
 
-    def check_fleet_slots(self):
-        """
-        read fleet slots with mission type, date of arrival/return and if return flight
-        :return:
-        """
-        # todo: Update to list needed!
-        self.read_in_mission_count()
-        response = self.session.get(
-            f'https://s{self.server_number}-{self.server_language}.ogame.gameforge.com/game/index.php?page=ingame&component=movement').text
-        soup = BeautifulSoup(response, features="html.parser")
-
-        self.missions = {}
-        for result in soup.find_all("div", {"id": "eventListWrap"}):
-            for tr in result.find_all("tr", {"class": "eventFleet"}):
-                id = int(re.search("\d+", tr["id"]).group())
-                return_flight = True if tr["data-return-flight"] == "true" else False
-                self.missions[id] = {
-                    "timestamp_arrival": datetime.fromtimestamp(int(tr["data-arrival-time"])),
-                    "mission-type": int(tr["data-mission-type"]),
-                    "return_flight": return_flight}
-
     def read_in_all_planets(self):
         for planetId in self.get_planet_ids():
             planet = Planet(self, planetId)
@@ -170,7 +152,7 @@ class Account:
         planet.reader.read_all()
         self.planets.append(planet)
         print('Planet ' + planet.name + ' with id ' + str(planet.id) + ' was added')
-        return planet  # hier nur append returnen? - Notiz falls Fehler auftreten
+        return planet
 
     def get_planet_ids(self):
         planet_ids = []
@@ -180,6 +162,12 @@ class Account:
             planet_ids.append(int(id))
         self.planet_ids = planet_ids
         return planet_ids
+
+    def read_in_all_planets_basics(self):
+        for planetId in self.get_planet_ids():
+            planet = Planet(self, planetId)
+            planet.reader.read_planet_infos()
+            self.planets.append(planet)
 
     def read_in_all_fleets(self):
         for planet in self.planets:

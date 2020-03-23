@@ -22,10 +22,22 @@ def safety_module(acc, sound=False):
             if acc.chk_get_attacked():
                 if sound:
                     sos()
-                acc.read_in_all_planets()
-                for planet in acc.planets:
+                acc.read_in_all_planets_basics()
+                acc.read_missions()
+                target_coords = []
+                planets = []
+                for mission in acc.missions:
+                    if mission.hostile:
+                        target_coords.append(mission.coord_to)
+                        for coord in target_coords:
+                            for planet in acc.planets:
+                                if str(planet.coordinates) == str(coord):
+                                    planets.append(planet)
+                for planet in planets:
+                    planet.reader.read_defenses()
                     planet.build_defense_by_ratio()
                     planet.build_defense_routine(1000)
+                sleep(time_to_sleep)
             else:
                 sleep_until = datetime.datetime.now() + datetime.timedelta(0, time_to_sleep)
                 print("Sleep until:", sleep_until)
@@ -36,6 +48,5 @@ def safety_module(acc, sound=False):
                 sos()
             sleep(time_to_sleep)
 
-
 if __name__ == "__main__":
-    safety_module(Account("Octans", "david-achilles@hotmail.de", "OGame!4friends"), sound=True)
+    safety_module(Account("Octans", "strabbit@web.de", "OGame!4friends"), sound=False)

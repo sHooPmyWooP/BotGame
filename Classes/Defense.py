@@ -14,13 +14,13 @@ class Defense:
         """
         self.name = name
         self.id = id
-        self.count = count
+        self.count = int(count)
         self.planet = planet
         self.max_build = 0
         self.in_construction_count = 0
 
     def __repr__(self):
-        return self.name + " count:" + str(self.count)
+        return self.name + " count: " + str(self.count)
 
     def build(self, amount=1):
         """
@@ -47,7 +47,10 @@ class Defense:
                                                .format(self.planet.acc.server_number, self.planet.acc.server_language,
                                                        self.planet.id, self.id)).text
         soup = BeautifulSoup(response, features="html.parser")
-        self.max_build = int(soup.find("input", {"name": "build_amount"})["max"])
+        try:
+            self.max_build = int(soup.find("input", {"name": "build_amount"})["max"])
+        except TypeError:  # no Commander OR e.g. Schildkuppel has already been built
+            self.max_build = 0
         return self.max_build
 
     def get_init_build_token(self, content):

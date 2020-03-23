@@ -1,3 +1,4 @@
+import os
 import re
 
 from bs4 import BeautifulSoup
@@ -60,13 +61,11 @@ class Planet:
         :param multiplier:
         :return:
         """
-        if self.defenses["Kleine Schildkuppel"].count is 0 and self.defenses["Kleine Schildkuppel"].read_max_build():
-            self.defenses["Kleine Schildkuppel"].build(1)
+        for defense in ["Kleine Schildkuppel", "Große Schildkuppel"]:
+            if self.defenses[defense].count is 0 and self.defenses[defense].read_max_build():
+                self.defenses[defense].build(1)
 
-        if self.defenses["Große Schildkuppel"].count is 0 and self.defenses["Große Schildkuppel"].read_max_build():
-            self.defenses["Große Schildkuppel"].build(1)
-
-        path_defense_routine = r'..Resources/BuildOrders/Defense_Routine'
+        path_defense_routine = os.path.abspath('../Resources/BuildOrders/Defense_Routine')
         with open(path_defense_routine, "r", encoding="utf-8") as f:
             next(f)
             for line in f:
@@ -81,15 +80,14 @@ class Planet:
         """
         :return:
         """
-        if self.defenses["Kleine Schildkuppel"].count is 0 and self.defenses["Kleine Schildkuppel"].read_max_build():
-            self.defenses["Kleine Schildkuppel"].build(1)
-
-        if self.defenses["Große Schildkuppel"].count is 0 and self.defenses["Große Schildkuppel"].read_max_build():
-            self.defenses["Große Schildkuppel"].build(1)
+        print(self.defenses)
+        for defense in ["Kleine Schildkuppel", "Große Schildkuppel"]:
+            if self.defenses[defense].count is 0 and self.defenses[defense].read_max_build():
+                self.defenses[defense].build(1)
 
         plasma_count = self.defenses["Plasmawerfer"].count
 
-        path_defense_routine = r'..Resources/BuildOrders/Defense_Routine'
+        path_defense_routine = os.path.abspath('../Resources/BuildOrders/Defense_Routine')
         with open(path_defense_routine, "r", encoding="utf-8") as f:
             next(f)
             for line in f:
@@ -159,7 +157,7 @@ class PlanetReader:
         self.read_supply_buildings()
         self.read_facility_buildings()
         self.read_fleet()
-        self.read_defences()
+        self.read_defenses()
         for building in self.planet.buildings:
             self.planet.buildings[building].set_construction_cost()
             self.planet.buildings[building].set_construction_time()
@@ -179,7 +177,7 @@ class PlanetReader:
                 for i, x in enumerate(coord):
                     coord[i] = x.replace("[", "").replace("]", "")
 
-                self.planet.coordinates = Coordinate(coord[0], coord[1], coord[2], Destination.Planet)
+                self.planet.coordinates = Coordinate(coord[0], coord[1], coord[2], 1)
 
             # Name
             for name in result.findAll("img", {"class": "planetPic"}):
@@ -279,12 +277,10 @@ class PlanetReader:
                 count = int(ship.text)
             except ValueError:  # Ships currently build - refer to currently accessible amount
                 count = ship.text.split("\n")[-1].strip()  # get last element of list
-            # ship_object = self.planet.ships[ship['aria-label']] if not read_moon else self.planet.moon.ships[
-            #     ship['aria-label']]
             self.planet.ships[ship['aria-label']] = Ship(ship['aria-label'], ship['data-technology'],
                                                          count, self)
 
-    def read_defences(self):
+    def read_defenses(self):
         response = self.planet.acc.session.get('https://s{}-{}.ogame.gameforge.com/game/index.php?page=ingame&'
                                                'component=defenses&cp={}'
                                                .format(self.planet.acc.server_number, self.planet.acc.server_language,
@@ -292,8 +288,12 @@ class PlanetReader:
         soup = BeautifulSoup(response, features="html.parser")
         for result in soup.findAll("div", {"id": 'technologies'}):
             for defense in result.find_all("li", {"class": "technology"}):
+                try:
+                    count = int(defense.text)
+                except ValueError:  # Ships currently build - refer to currently accessible amount
+                    count = defense.text.split("\n")[-1].strip()  # get last element of list
                 self.planet.defenses[defense['aria-label']] = Defense(defense['aria-label'], defense['data-technology'],
-                                                                      defense.text, self.planet)
+                                                                      count, self.planet)
         queue = soup.find("table", {"class": "queue"})
 
         # Building Queue
