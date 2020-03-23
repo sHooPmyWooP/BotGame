@@ -293,7 +293,7 @@ class PlanetReader:
         for result in soup.findAll("div", {"id": 'technologies'}):
             for defense in result.find_all("li", {"class": "technology"}):
                 try:
-                    count = int(defense.text)
+                    count = int(defense.text.replace(".", ""))
                 except ValueError:  # Ships currently build - refer to currently accessible amount
                     count = defense.text.split("\n")[-1].strip()  # get last element of list
                 self.planet.defenses[defense['aria-label']] = Defense(defense['aria-label'], defense['data-technology'],

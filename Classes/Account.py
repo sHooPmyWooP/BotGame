@@ -167,6 +167,15 @@ class Account:
         self.planet_ids = planet_ids
         return planet_ids
 
+    def init_planets(self):
+        planets = self.get_planet_ids()
+        for id in planets:
+            for planet in self.planets:
+                if planet.id == id:
+                    break
+            else:
+                self.planets.append(Planet(self, id))
+
     def read_in_all_planets_basics(self):
         for planetId in self.get_planet_ids():
             planet = Planet(self, planetId)
@@ -176,6 +185,7 @@ class Account:
     def read_in_all_fleets(self):
         for planet in self.planets:
             planet.reader.read_fleet()
+            print(planet.ships)
 
     def get_init_chat_token(self):
         marker_string = 'var ajaxChatToken = '
