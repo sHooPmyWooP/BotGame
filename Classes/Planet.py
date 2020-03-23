@@ -1,8 +1,12 @@
 import os
 import re
+import sys
+from os import path
 
 from bs4 import BeautifulSoup
 
+sys.path.append(
+    path.dirname(path.dirname(path.abspath(__file__))))  # necessary to make the file structure work on raspi
 from Classes.Building import Building
 from Classes.Coordinate import Coordinate, Destination
 from Classes.Defense import Defense
@@ -80,26 +84,28 @@ class Planet:
         """
         :return:
         """
-        print(self.defenses)
         for defense in ["Kleine Schildkuppel", "Große Schildkuppel"]:
             if self.defenses[defense].count is 0 and self.defenses[defense].read_max_build():
                 self.defenses[defense].build(1)
 
         plasma_count = self.defenses["Plasmawerfer"].count
 
-        path_defense_routine = os.path.abspath('../Resources/BuildOrders/Defense_Routine')
-        with open(path_defense_routine, "r", encoding="utf-8") as f:
-            next(f)
-            for line in f:
-                line = line.split("|")
-                if self.defenses[line[0]].read_max_build():  # possible to build
-                    should_be_build = plasma_count * int(line[1])
-                    if self.defenses[line[0]].count + self.defenses[
-                        line[0]].in_construction_count <= should_be_build:  # fewer count than it should be
-                        if self.defenses[line[0]].max_build <= should_be_build:
-                            self.defenses[line[0]].build(self.defenses[line[0]].max_build)  # build max possible
-                        else:
-                            self.defenses[line[0]].build(should_be_build)
+        if plasma_count:
+            path_defense_routine = os.path.abspath('../Resources/BuildOrders/Defense_Routine')
+            with open(path_defense_routine, "r", encoding="utf-8") as f:
+                next(f)
+                for line in f:
+                    line = line.split("|")
+                    if self.defenses[line[0]].read_max_build():  # possible to build
+                        should_be_build = plasma_count * int(line[1])
+                        if self.defenses[line[0]].count + self.defenses[
+                            line[0]].in_construction_count <= should_be_build:  # fewer count than it should be
+                            if self.defenses[line[0]].max_build <= should_be_build:
+                                self.defenses[line[0]].build(self.defenses[line[0]].max_build)  # build max possible
+                            else:
+                                self.defenses[line[0]].build(should_be_build)
+        else:
+            print("Nothing build - no Plasma yet")
 
     def send_fleet(self, mission_id, coords, ships, resources=[0, 0, 0], speed=10, holdingtime=0, send_from_moon=False):
         """
@@ -110,10 +116,8 @@ class Planet:
         :param speed: int
         :param holdingtime: int (1 for expeditions)
         """
-        planet_id = self.id if not send_from_moon else self.moon.id
-
         response = self.acc.session.get(
-            f'https://s{self.acc.server_number}-{self.acc.server_language}.ogame.gameforge.com/game/index.php?page=ingame&component=fleetdispatch&cp={planet_id}').text
+            f'https://s{self.acc.server_number}-{self.acc.server_language}.ogame.gameforge.com/game/index.php?page=ingame&component=fleetdispatch&cp={self.id}').text
         self.acc.get_init_sendfleet_token(response)
         form_data = {'token': self.acc.sendfleet_token}
 

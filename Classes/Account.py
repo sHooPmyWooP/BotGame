@@ -1,8 +1,12 @@
 import re
+import sys
+from os import path
 
 import requests
 from bs4 import BeautifulSoup
 
+sys.path.append(
+    path.dirname(path.dirname(path.abspath(__file__))))  # necessary to make the file structure work on raspi
 from Classes.Coordinate import Coordinate
 from Classes.Message import SpyMessage
 from Classes.Mission import Mission

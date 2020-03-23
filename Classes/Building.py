@@ -1,7 +1,11 @@
 import datetime
 import os
 import re
+import sys
+from os import path
 
+sys.path.append(
+    path.dirname(path.dirname(path.abspath(__file__))))  # necessary to make the file structure work on raspi
 from Classes.Resources import Resources
 
 
