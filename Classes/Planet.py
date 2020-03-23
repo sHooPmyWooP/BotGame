@@ -66,7 +66,7 @@ class Planet:
         if self.defenses["Große Schildkuppel"].count is 0 and self.defenses["Große Schildkuppel"].read_max_build():
             self.defenses["Große Schildkuppel"].build(1)
 
-        path_defense_routine = r'Resources/BuildOrders/Defense_Routine'
+        path_defense_routine = r'..Resources/BuildOrders/Defense_Routine'
         with open(path_defense_routine, "r", encoding="utf-8") as f:
             next(f)
             for line in f:
@@ -89,7 +89,7 @@ class Planet:
 
         plasma_count = self.defenses["Plasmawerfer"].count
 
-        path_defense_routine = r'Resources/BuildOrders/Defense_Routine'
+        path_defense_routine = r'..Resources/BuildOrders/Defense_Routine'
         with open(path_defense_routine, "r", encoding="utf-8") as f:
             next(f)
             for line in f:

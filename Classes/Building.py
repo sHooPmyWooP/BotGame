@@ -1,4 +1,5 @@
 import datetime
+import os
 import re
 
 from Classes.Resources import Resources
@@ -56,7 +57,7 @@ class Building:
         Calculate construction costs & required Energy after the build
         :return:
         """
-        path_building_base = r'Resources/Static_Information/Building_Base_Info'
+        path_building_base = os.path.abspath('../Resources/Static_Information/Building_Base_Info')
         with open(path_building_base, "r") as f:
             next(f)
             for line in f:

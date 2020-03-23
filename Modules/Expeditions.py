@@ -1,5 +1,6 @@
 import datetime
 import random
+import traceback
 from time import sleep
 
 import pause
@@ -87,7 +88,6 @@ class Expedition:
         return planet_t_count_sorted
 
     def thread_expos(self):
-        print("Starting Thread...")
         while True:
             try:
                 i = 0
@@ -120,14 +120,11 @@ class Expedition:
                 print("AssError")
                 pass
             except Exception as e:
-                print(e)
+                traceback.print_exc()
                 pass
 
 
-e = Expedition(Account("Octans", "david-achilles@hotmail.de", "OGame!4friends"))
+e = Expedition(Account("Octans", "strabbit@web.de", "OGame!4friends"))
 e.thread_expos()
-
-# with ThreadPoolExecutor() as executor:
-#     expo1 = executor.submit(thread_expos, a1.planets[0])
 
 print("Done...")
