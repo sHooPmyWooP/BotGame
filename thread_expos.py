@@ -54,7 +54,8 @@ class Expedition:
             self.fleet_gestartet = True
 
     def chk_for_open_slot(self):
-        self.acc.check_fleet_slots()
+        self.acc.read_in_mission_count()
+        self.acc.read_missions()
         self.possible_expos = (self.acc.expo_count[1] - self.acc.expo_count[0])
         self.possible_fleets = (self.acc.fleet_count[1] - self.acc.fleet_count[0])
         if self.acc.expo_count[1] < 1:
@@ -63,11 +64,9 @@ class Expedition:
         if self.possible_expos < 1 or self.possible_fleets < 1:
             return_times = []
             for mission in self.acc.missions:
-                if self.acc.missions[mission][
-                    "return_flight"]:  # could possibly check for type too if fleet slots were available anyway
-                    return_times.append(self.acc.missions[mission]["timestamp_arrival"] + datetime.timedelta(0,
-                                                                                                             15))  #
-                    # wait 15 seconds after return of fleet to account for delay
+                if mission.return_flight:  # could possibly check for type too if fleet slots were available anyway
+                    return_times.append(mission.get_arrival_as_datetime() + datetime.timedelta(0,
+                                                                                               15))  # wait 15 seconds after return of fleet to account for delay
             earliest_start = min(dt for dt in return_times)
             print("Pause until", earliest_start)
             pause.until(earliest_start)

@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 
 from Classes.Coordinate import Coordinate
 from Classes.Message import SpyMessage
+from Classes.Mission import Mission
 from Classes.OGame_API import OGameAPI
 from Classes.Planet import Planet
 from Classes.Research import Research
@@ -36,7 +37,7 @@ class Account:
         self.expo_count = [0, 0]  # current/max
         self.fleet_count = [0, 0]  # current/max
         self.offers_count = [0, 0]  # current/max
-        self.missions = {}  # mission id +1 for return flight
+        self.missions = []
 
         if user_agent is None:
             user_agent = {
@@ -141,6 +142,7 @@ class Account:
         read fleet slots with mission type, date of arrival/return and if return flight
         :return:
         """
+        # todo: Update to list needed!
         self.read_in_mission_count()
         response = self.session.get(
             f'https://s{self.server_number}-{self.server_language}.ogame.gameforge.com/game/index.php?page=ingame&component=movement').text
@@ -236,55 +238,34 @@ class Account:
         self.session.get('https://s{}-{}.ogame.gameforge.com/game/index.php?page=logout'
                          .format(self.server_number, self.server_language))
 
-    def get_missions(self):
-        missions_list = []
-        response = self.session.get('https://s{}-{}.ogame.gameforge.com/game/index.php?'
-                                    'page=componentOnly&component=eventList&action=fetchEventBox&ajax=1&asJson=1'
-                                    .format(self.server_number, self.server_language),
-                                    headers={'X-Requested-With': 'XMLHttpRequest'}).json()
-        if response['friendly'] != 0:
-            response = self.session.get('https://s{}-{}.ogame.gameforge.com/game/index.php?page=ingame&'
-                                        'component=movement'
-                                        .format(self.server_number, self.server_language)).text
+    def read_missions(self):
+        response = self.session.get('https://s{}-{}.ogame.gameforge.com/game/index.php?page=ingame&'
+                                    'component=movement'
+                                    .format(self.server_number, self.server_language)).text
+        soup = BeautifulSoup(response, features="html.parser")
+        events = soup.find_all("tr", {"class": "eventFleet"})
 
-            events = response.split('class="fleetinfo"')
-            del events[0]
-            fleets = response.split('<div id="fleet')
-            del fleets[0]
-
-            for fleet, event in zip(fleets, events):
-                fleet_id = int(fleet[0:30].split('"')[0])
-                fleet_info = event.split('</table>')[0].split('<td')
-                del fleet_info[0]
-                remove_chars = ['>', "\n", ' ', ':</td', 'class="value"', '</td</tr<tr', '0</td</tr', '</td</tr',
-                                ':</th</tr<tr', 'colspan="2"&nbsp;<thcolspan="2"']
-                for char in remove_chars:
-                    fleet_info = [s.replace(char, '') for s in fleet_info]
-                try:
-                    fleet_info.remove('')
-                except:
-                    pass
-
-                marker = fleet.find('data-mission-type="')
-                fleet_mission = int(fleet[marker + 19: marker + 22].split('"')[0])
-
-                if 'data-return-flight="1"' in fleet:
-                    fleet_return = True
-                else:
-                    fleet_return = False
-
-                marker = fleet.find('<span class="timer tooltip" title="')
-                fleet_arrival = datetime.strptime(fleet[marker + 35: marker + 54], '%d.%m.%Y %H:%M:%S')
-
-                marker = fleet.find('<span class="originCoords tooltip" title="')
-                origin_raw = fleet[marker: marker + 180]
-                origin_list = origin_raw.split('[')[1].split(']')[0].split(':')
-                fleet_origin = Coordinate(origin_list[0], origin_list[1], origin_list[2])
-                marker = fleet.find('<span class="destinationCoords')
-                destination_raw = fleet[marker: marker + 200]
-                destination_list = destination_raw.split('[')[1].split(']')[0].split(':')
-                fleet_destination = Coordinate(destination_list[0], destination_list[1], destination_list[2])
-
+        if events:
+            for event in events:
+                id = event["id"].replace("eventRow-", "")
+                mission_type = int(event["data-mission-type"])
+                return_flight = True if event["data-return-flight"] == "true" else False
+                arrival_time = int(event["data-arrival-time"])
+                to_moon = True if event.find("td", {"class": "destFleet"}).find("figure", {"class": "moon"}) else False
+                from_moon = True if event.find("td", {"class": "originFleet"}).find("figure",
+                                                                                    {"class": "moon"}) else False
+                coords_from_list = event.find("td", {"class": "coordsOrigin"}).find("a").text.strip().replace("[",
+                                                                                                              "").replace(
+                    "]", "").split(":")
+                coords_from = Coordinate(coords_from_list[0], coords_from_list[1], coords_from_list[2],
+                                         2 if from_moon else 1)
+                coords_to_list = event.find("td", {"class": "destCoords"}).find("a").text.strip().replace("[",
+                                                                                                          "").replace(
+                    "]", "").split(":")
+                coords_to = Coordinate(coords_to_list[0], coords_to_list[1], coords_to_list[2], 2 if to_moon else 1)
+                hostile = True if event.find("td", {"class": "countDown"}).find("span", {"class": "hostile"}) else False
+                self.missions.append(
+                    Mission(id, mission_type, return_flight, hostile, coords_from, coords_to, arrival_time))
 
 if __name__ == "__main__":
     a1 = Account(universe="Octans", username="david-achilles@hotmail.de", password="OGame!4friends")
