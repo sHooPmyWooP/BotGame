@@ -248,7 +248,7 @@ class Account:
                                     .format(self.server_number, self.server_language)).text
         soup = BeautifulSoup(response, features="html.parser")
         events = soup.find_all("tr", {"class": "eventFleet"})
-
+        self.missions = []
         if events:
             for event in events:
                 id = event["id"].replace("eventRow-", "")

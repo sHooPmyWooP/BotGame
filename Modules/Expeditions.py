@@ -123,7 +123,6 @@ class Expedition:
                 sleep(60)
             except AssertionError:
                 traceback.print_exc()
-                print("AssError")
                 pass
             except Exception as e:
                 traceback.print_exc()
