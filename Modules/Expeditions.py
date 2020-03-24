@@ -122,6 +122,7 @@ class Expedition:
                 print("Connection failed...", e)
                 sleep(60)
             except AssertionError:
+                traceback.print_exc()
                 print("AssError")
                 pass
             except Exception as e:

@@ -9,6 +9,9 @@ class Ship:
             self.count = count
         self.planet = planet
 
+    def __repr__(self):
+        return self.name + " count: " + str(self.count)
+
     def get_name_by_id(self, id):
         if self.id == id:
             return self.name

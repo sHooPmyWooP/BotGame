@@ -175,6 +175,8 @@ class Account:
                     break
             else:
                 self.planets.append(Planet(self, id))
+        for planet in self.planets:
+            planet.reader.read_planet_infos()
 
     def read_in_all_planets_basics(self):
         for planetId in self.get_planet_ids():
