@@ -222,7 +222,6 @@ class Account:
                                      'page=componentOnly&component=eventList&action=fetchEventBox&ajax=1&asJson=1'
                                      .format(self.server_number, self.server_language),
                                      headers={'X-Requested-With': 'XMLHttpRequest'}).json()
-        print(response)
         if response['hostile'] > 0:
             return True
         else:

@@ -1,0 +1,17 @@
+{
+  "Pasiphae": {
+    "username": "strabbit@web.de",
+    "password": "OGame!4friends",
+    "config": {
+      "waiting_time": 600
+    }
+  },
+  "Octans": {
+    "username": "strabbit@web.de",
+    "password": "OGame!4friends",
+    "config": {
+      "waiting_time": 300
+    }
+  }
+}
+

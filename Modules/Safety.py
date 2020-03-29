@@ -1,27 +1,16 @@
 import datetime
-import winsound
+import json
+import sys
 from time import sleep
 
 from Classes.Account import Account
 
 
-def sos():
-    for i in range(0, 3):
-        winsound.Beep(2000, 100)
-        for i in range(0, 3):
-            winsound.Beep(2000, 400)
-            for i in range(0, 3):
-                winsound.Beep(2000, 100)
-
-
-def safety_module(acc, sound=False):
+def safety_module(acc, time_to_sleep):
     while True:
-        time_to_sleep = 180
         try:
             acc.login()
             if acc.chk_get_attacked():
-                if sound:
-                    sos()
                 acc.read_in_all_planets_basics()
                 acc.read_missions()
                 target_coords = []
@@ -44,9 +33,16 @@ def safety_module(acc, sound=False):
                 sleep(time_to_sleep)
         except Exception as e:
             print("Exception! Sleeping 60 Seconds before retry.", e)
-            if sound:
-                sos()
             sleep(time_to_sleep)
 
+
+def get_config(uni):
+    with open('Config/Safety_Config.json', encoding="utf-8") as f:
+        d = json.load(f)
+    return d[uni]
+
+
 if __name__ == "__main__":
-    safety_module(Account("Octans", "strabbit@web.de", "OGame!4friends"), sound=True)
+    uni = sys.argv[1]
+    config = get_config(uni)
+    safety_module(Account(uni, "strabbit@web.de", "OGame!4friends"), config["config"]["waiting_time"])
