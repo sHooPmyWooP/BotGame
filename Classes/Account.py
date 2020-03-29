@@ -187,7 +187,7 @@ class Account:
     def read_in_all_fleets(self):
         for planet in self.planets:
             planet.reader.read_fleet()
-            print(planet.ships)
+            #  print(planet.name,planet.ships)
 
     def get_init_chat_token(self):
         marker_string = 'var ajaxChatToken = '
@@ -271,8 +271,20 @@ class Account:
                 self.missions.append(
                     Mission(id, mission_type, return_flight, hostile, coords_from, coords_to, arrival_time))
 
-if __name__ == "__main__":
-    a1 = Account(universe="Octans", username="david-achilles@hotmail.de", password="OGame!4friends")
+    def chk_logged_in(self):
+        # form_data = {'action': 'showPlayerList'}
+        response = self.session.get(
+            'https://s{}-{}.ogame.gameforge.com/game/index.php?page=chat'.format(self.server_number,
+                                                                                 self.server_language))
+        if response.url == f'https://lobby.ogame.gameforge.com?language={self.server_language}':
+            return False
+        else:
+            return True
 
-    print(a1.get_fleet())
+
+if __name__ == "__main__":
+    a1 = Account(universe="Octans", username="strabbit@web.de", password="OGame!4friends")
+    print(a1.chk_logged_in())
+    a1.logout()
+    print(a1.chk_logged_in())
     print("Done...")

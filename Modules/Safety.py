@@ -49,4 +49,4 @@ def safety_module(acc, sound=False):
             sleep(time_to_sleep)
 
 if __name__ == "__main__":
-    safety_module(Account("Octans", "strabbit@web.de", "OGame!4friends"), sound=False)
+    safety_module(Account("Octans", "strabbit@web.de", "OGame!4friends"), sound=True)
