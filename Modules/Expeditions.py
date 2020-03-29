@@ -117,15 +117,12 @@ class Expedition:
             expo_factor = ship[1]["expo_factor"]
             count_available = ship[0].count
             count_max = 9999999999999999 if not ship[1]["max"] else ship[1]["max"]
-            # count_min = min(ship[1]["min"], count_available)
+            count_min = min(ship[1]["min"], count_available)
             threshold = min(ship[1]["threshold"], count_available)
 
             send_max = (min(count_available, count_max) - threshold) / (expo_factor * self.possible_expos)
-            # send_min = count_min if min_over_threshold else count_min - threshold
-            if count_max <= count_available:
-                count_send = count_max
-            else:
-                count_send = count_available
+            send_min = count_min if min_over_threshold else count_min - threshold
+            count_send = int(max(send_max, send_min, 0)) if count_max > 0 else 0
             ships_send.append([ship[0], count_send])
 
         random_system = random.randint(planet.coordinates.system - self.config["config"]["system_variance"],
