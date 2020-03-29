@@ -121,7 +121,7 @@ class Expedition:
             threshold = min(ship[1]["threshold"], count_available)
 
             send_max = (min(count_available, count_max) - threshold) / (expo_factor * self.possible_expos)
-            send_min = max(send_max, count_min if min_over_threshold else count_min - threshold)
+            send_min = count_min if min_over_threshold else count_min - threshold
             count_send = int(max(send_max, send_min, 0))
             ships_send.append([ship[0], count_send])
 

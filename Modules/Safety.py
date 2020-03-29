@@ -4,6 +4,8 @@ import sys
 from os import path
 from time import sleep
 
+sys.path.append(
+    path.dirname(path.dirname(path.abspath(__file__))))  # necessary to make the file structure work on raspi
 from Classes.Account import Account
 
 
@@ -44,9 +46,6 @@ def get_config(uni):
 
 
 if __name__ == "__main__":
-    sys.path.append(
-        path.dirname(path.dirname(path.abspath(__file__))))  # necessary to make the file structure work on raspi
-
     uni = sys.argv[1]
     config = get_config(uni)
     safety_module(Account(uni, "strabbit@web.de", "OGame!4friends"), config["config"]["waiting_time"])
