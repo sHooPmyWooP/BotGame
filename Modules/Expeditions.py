@@ -62,7 +62,7 @@ class Expedition:
                 pass
 
     def get_config(self, uni):
-        with open('Config\Expeditions_Config.json', encoding="utf-8") as f:
+        with open('Config/Expeditions_Config.json', encoding="utf-8") as f:
             d = json.load(f)
         return d[uni]
 
