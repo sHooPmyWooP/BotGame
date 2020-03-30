@@ -128,12 +128,11 @@ class Expedition:
                 count_send = min(count_min, count_available)
             else:
                 count_send = count_calc
-            ships_send.append([ship[0], count_send])
+            if count_send > 0:
+                ships_send.append([ship[0], int(count_send)])
 
         random_system = random.randint(planet.coordinates.system - self.config["config"]["system_variance"],
                                        planet.coordinates.system + self.config["config"]["system_variance"])
-
-        ships_send = [ship for ship in ships_send if ship[1] > 0]
 
         if ships_send:
             response = planet.send_fleet(mission_type_ids.expedition,
