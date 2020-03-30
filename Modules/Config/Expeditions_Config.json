@@ -22,14 +22,14 @@
         },
         "Großer Transporter": {
           "min": 0,
-          "max": false,
+          "max": 999999999999,
           "threshold": 0,
           "expo_factor": 1,
           "point_weight": 12
         },
         "Kleiner Transporter": {
           "min": 0,
-          "max": false,
+          "max": 999999999999,
           "threshold": 0,
           "expo_factor": 1,
           "point_weight": 4
@@ -57,7 +57,7 @@
         },
         "Pathfinder": {
           "min": 0,
-          "max": false,
+          "max": 999999999999,
           "threshold": 0,
           "expo_factor": 1,
           "point_weight": 31
@@ -151,14 +151,14 @@
         },
         "Großer Transporter": {
           "min": 0,
-          "max": false,
+          "max": 999999999999,
           "threshold": 0,
           "expo_factor": 1,
           "point_weight": 12
         },
         "Kleiner Transporter": {
           "min": 0,
-          "max": false,
+          "max": 999999999999,
           "threshold": 0,
           "expo_factor": 1,
           "point_weight": 4
@@ -186,7 +186,7 @@
         },
         "Pathfinder": {
           "min": 0,
-          "max": false,
+          "max": 999999999999,
           "threshold": 0,
           "expo_factor": 1,
           "point_weight": 31
