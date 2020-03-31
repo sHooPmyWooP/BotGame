@@ -5,6 +5,8 @@ from os import path
 
 from bs4 import BeautifulSoup
 
+from Resources.Static_Information.Constants import mission_type_ids
+
 sys.path.append(
     path.dirname(path.dirname(path.abspath(__file__))))  # necessary to make the file structure work on raspi
 from Classes.Building import Building
@@ -107,7 +109,7 @@ class Planet:
         else:
             print("Nothing build - no Plasma yet")
 
-    def send_fleet(self, mission_id, coords, ships, resources=[0, 0, 0], speed=10, holdingtime=0, send_from_moon=False):
+    def send_fleet(self, mission_id, coords, ships, resources=[0, 0, 0], speed=10, holdingtime=0):
         """
         :param mission_id: type of mission
         :param coords: Coordinate()
@@ -141,14 +143,33 @@ class Planet:
                           'retreatAfterDefenderRetreat': 0,
                           'union': 0,
                           'holdingtime': holdingtime})
+
+        if not sum(ship[1] for ship in ships) > 0:
+            return [False, 1]  # no ships have been selected - better not query Ogame API
+
+        if not sum(ship[1] for ship in ships if
+                   ship[0].name != "Spionagesonde") > 0 and mission_id == mission_type_ids.expedition:
+            return [False, 2]  # no expo with only Spionagesonde - better not query Ogame API
+
         response = self.acc.session.post('https://s{}-{}.ogame.gameforge.com/game/index.php?page=ingame&'
                                          'component=fleetdispatch&action=sendFleet&ajax=1&asJson=1'
                                          .format(self.acc.server_number, self.acc.server_language), data=form_data,
                                          headers={'X-Requested-With': 'XMLHttpRequest'}).json()
         if response["success"]:
-            print(self.name, "Mission started:", mission_id,
-                  ["ship:" + str(ship[0].name) + " amount:" + str(ship[1]) for ship in ships], coords)
-        return response
+            print("----------")
+            print(self.name, "Mission started:", mission_id, coords)
+            for ship in ships:
+                print("{:.<22}".format(ship[0].name) + " -> amount: " + '{: >10}'.format(ship[1]))
+            print("----------")
+            return [True, 0]
+        else:
+            if response["errors"][0]["error"] == 4028:  # message = 'Nicht genügend Treibstoff'
+                print("Nicht genügend Treibstoff")
+                return [False, 3]
+            elif response["errors"][0][
+                "error"] == 4017:  # message = 'Das Ziel kann nicht angeflogen werden. Du musst zuerst Astrophysik erforschen.'
+                print("Das Ziel kann nicht angeflogen werden. Du musst zuerst Astrophysik erforschen.")
+                return [False, 4]
 
 
 class PlanetReader:

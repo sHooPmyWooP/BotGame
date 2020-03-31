@@ -23,7 +23,7 @@
         "Großer Transporter": {
           "min": 0,
           "max": 999999999999,
-          "threshold": 0,
+          "threshold": 5,
           "expo_factor": 1,
           "point_weight": 12
         },
@@ -43,14 +43,14 @@
         },
         "Kreuzer": {
           "min": 0,
-          "max": 0,
+          "max": 999999999999,
           "threshold": 0,
           "expo_factor": 1,
           "point_weight": 0
         },
         "Leichter Jäger": {
           "min": 0,
-          "max": 0,
+          "max": 999999999999,
           "threshold": 0,
           "expo_factor": 1,
           "point_weight": 1
@@ -58,7 +58,7 @@
         "Pathfinder": {
           "min": 0,
           "max": 999999999999,
-          "threshold": 0,
+          "threshold": 5,
           "expo_factor": 1,
           "point_weight": 31
         },
@@ -78,21 +78,21 @@
         },
         "Schlachtkreuzer": {
           "min": 0,
-          "max": 0,
+          "max": 999999999999,
           "threshold": 0,
           "expo_factor": 1,
           "point_weight": 0
         },
         "Schlachtschiff": {
           "min": 0,
-          "max": 0,
+          "max": 999999999999,
           "threshold": 0,
           "expo_factor": 1,
           "point_weight": 0
         },
         "Schwerer Jäger": {
           "min": 0,
-          "max": 0,
+          "max": 999999999999,
           "threshold": 0,
           "expo_factor": 1,
           "point_weight": 0
@@ -120,7 +120,7 @@
         },
         "Zerstörer": {
           "min": 0,
-          "max": 0,
+          "max": 999999999999,
           "threshold": 0,
           "expo_factor": 1,
           "point_weight": 0
@@ -187,7 +187,7 @@
         "Pathfinder": {
           "min": 0,
           "max": 999999999999,
-          "threshold": 0,
+          "threshold": 5,
           "expo_factor": 1,
           "point_weight": 31
         },

@@ -91,9 +91,9 @@ class Expedition:
         for planet in self.acc.planets:
             print("--------", planet.name, "--------")
             for ship in planet.ships:
-                if planet.ships[ship].name == "Kleiner Transporter" or planet.ships[
-                    ship].name == "Großer Transporter" or planet.ships[ship].name == "Pathfinder":
-                    print(planet.ships[ship].name, planet.ships[ship].count)
+                if planet.ships[ship].count:
+                    print("{:.<22}".format(planet.ships[ship].name) + " -> amount: " + '{: >10}'.format(
+                        planet.ships[ship].count))
 
         planet_points = []
         for i in range(len(self.acc.planets)):
@@ -142,15 +142,8 @@ class Expedition:
         else:  # No ships available for expo
             raise AttributeError
 
-        if not response['success']:
-            print(response["errors"])
-            if response["errors"][0]["error"] == 4028:  # message = 'Nicht genügend Treibstoff'
-                raise ArithmeticError
-            elif response["errors"][0][
-                "error"] == 4017:  # message = 'Das Ziel kann nicht angeflogen werden. Du musst zuerst Astrophysik erforschen.'
-                print("Das Ziel kann nicht angeflogen werden. Du musst zuerst Astrophysik erforschen.")
-                exit()
-            # Log: message': 'Eine Expedition muss mindestens ein bemanntes Schiff enthalten.', 'error': 4036
+        if not response[0]:
+            raise AttributeError
 
         if response['success']:
             self.possible_expos -= 1
