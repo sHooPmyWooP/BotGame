@@ -145,7 +145,7 @@ class Expedition:
         if not response[0]:
             raise AttributeError
 
-        if response['success']:
+        if response[0]:
             self.possible_expos -= 1
             self.possible_fleets -= 1
             self.fleet_gestartet = True

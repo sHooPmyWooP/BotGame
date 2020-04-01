@@ -66,14 +66,14 @@ class Account:
                 self.server_number = server['number']
                 break
         accounts = self.session.get('https://lobby.ogame.gameforge.com/api/users/me/accounts').json()
-        try:
-            for account in accounts:
-                if account['server']['number'] == self.server_number:
-                    self.server_id = account['id']
-                    self.server_language = account['server']['language']
-        except TypeError:
-            print("No valid login information!")
-            exit()
+        # try:
+        for account in accounts:
+            if account['server']['number'] == self.server_number:
+                self.server_id = account['id']
+                self.server_language = account['server']['language']
+        # except TypeError:
+        #     print("No valid login information!")
+        #     exit()
         login_link = self.session.get('https://lobby.ogame.gameforge.com/api/users/me/loginLink?'
                                       'id={}'
                                       '&server[language]={}'
