@@ -71,7 +71,7 @@ class Planet:
             if self.defenses[defense].count is 0 and self.defenses[defense].read_max_build():
                 self.defenses[defense].build(1)
 
-        path_defense_routine = os.path.abspath('Resources/BuildOrders/Defense_Routine')
+        path_defense_routine = os.path.abspath('../Resources/BuildOrders/Defense_Routine')
         with open(path_defense_routine, "r", encoding="utf-8") as f:
             next(f)
             for line in f:

@@ -8,14 +8,14 @@
       "ships": {
         "Bomber": {
           "min": 0,
-          "max": 999999999,
+          "max": 777777777,
           "threshold": 0,
           "expo_factor": 1,
           "point_weight": 0
         },
         "Crawler": {
           "min": 0,
-          "max": 999999999,
+          "max": 777777777,
           "threshold": 0,
           "expo_factor": 1,
           "point_weight": 0
@@ -36,70 +36,70 @@
         },
         "Kolonieschiff": {
           "min": 0,
-          "max": 999999999,
+          "max": 777777777,
           "threshold": 0,
           "expo_factor": 1,
           "point_weight": 0
         },
         "Kreuzer": {
           "min": 0,
-          "max": 999999999,
+          "max": 777777777,
           "threshold": 0,
           "expo_factor": 1,
           "point_weight": 0
         },
         "Leichter Jäger": {
           "min": 0,
-          "max": 999999999,
+          "max": 8888888,
           "threshold": 0,
           "expo_factor": 1,
           "point_weight": 1
         },
         "Pathfinder": {
           "min": 1,
-          "max": 999999999999,
+          "max": 1,
           "threshold": 0,
           "expo_factor": 1,
           "point_weight": 31
         },
         "Reaper": {
           "min": 0,
-          "max": 999999999,
+          "max": 777777777,
           "threshold": 0,
           "expo_factor": 1,
           "point_weight": 0
         },
         "Recycler": {
           "min": 0,
-          "max": 999999999,
+          "max": 777777777,
           "threshold": 0,
           "expo_factor": 1,
           "point_weight": 0
         },
         "Schlachtkreuzer": {
           "min": 0,
-          "max": 999999999,
+          "max": 777777777,
           "threshold": 0,
           "expo_factor": 1,
           "point_weight": 0
         },
         "Schlachtschiff": {
           "min": 0,
-          "max": 999999999,
+          "max": 777777777,
           "threshold": 0,
           "expo_factor": 1,
           "point_weight": 0
         },
         "Schwerer Jäger": {
           "min": 0,
-          "max": 999999999,
+          "max": 8888888,
           "threshold": 0,
           "expo_factor": 1,
           "point_weight": 0
         },
         "Solarsatellit": {
           "min": 0,
-          "max": 999999999,
+          "max": 777777777,
           "threshold": 0,
           "expo_factor": 1,
           "point_weight": 0
@@ -113,143 +113,14 @@
         },
         "Todesstern": {
           "min": 0,
-          "max": 999999999,
+          "max": 777777777,
           "threshold": 0,
           "expo_factor": 1,
           "point_weight": 0
         },
         "Zerstörer": {
-          "min": 0,
-          "max": 999999999,
-          "threshold": 0,
-          "expo_factor": 1,
-          "point_weight": 0
-        }
-      }
-    }
-  },
-  "Octans": {
-    "username": "strabbit@web.de",
-    "password": "OGame!4friends",
-    "config": {
-      "min_over_threshold": true,
-      "system_variance": 0,
-      "ships": {
-        "Bomber": {
-          "min": 0,
-          "max": 999999999,
-          "threshold": 0,
-          "expo_factor": 1,
-          "point_weight": 0
-        },
-        "Crawler": {
-          "min": 0,
-          "max": 999999999,
-          "threshold": 0,
-          "expo_factor": 1,
-          "point_weight": 0
-        },
-        "Großer Transporter": {
-          "min": 0,
-          "max": 999999999999,
-          "threshold": 0,
-          "expo_factor": 1,
-          "point_weight": 12
-        },
-        "Kleiner Transporter": {
-          "min": 0,
-          "max": 999999999999,
-          "threshold": 0,
-          "expo_factor": 1,
-          "point_weight": 4
-        },
-        "Kolonieschiff": {
-          "min": 0,
-          "max": 999999999,
-          "threshold": 0,
-          "expo_factor": 1,
-          "point_weight": 0
-        },
-        "Kreuzer": {
-          "min": 0,
-          "max": 999999999,
-          "threshold": 0,
-          "expo_factor": 1,
-          "point_weight": 0
-        },
-        "Leichter Jäger": {
-          "min": 0,
-          "max": 999999999,
-          "threshold": 0,
-          "expo_factor": 1,
-          "point_weight": 1
-        },
-        "Pathfinder": {
-          "min": 0,
-          "max": 999999999999,
-          "threshold": 0,
-          "expo_factor": 1,
-          "point_weight": 31
-        },
-        "Reaper": {
-          "min": 0,
-          "max": 999999999,
-          "threshold": 0,
-          "expo_factor": 1,
-          "point_weight": 0
-        },
-        "Recycler": {
-          "min": 0,
-          "max": 999999999,
-          "threshold": 0,
-          "expo_factor": 1,
-          "point_weight": 0
-        },
-        "Schlachtkreuzer": {
-          "min": 0,
-          "max": 999999999,
-          "threshold": 0,
-          "expo_factor": 1,
-          "point_weight": 0
-        },
-        "Schlachtschiff": {
-          "min": 0,
-          "max": 999999999,
-          "threshold": 0,
-          "expo_factor": 1,
-          "point_weight": 0
-        },
-        "Schwerer Jäger": {
-          "min": 0,
-          "max": 999999999,
-          "threshold": 0,
-          "expo_factor": 1,
-          "point_weight": 0
-        },
-        "Solarsatellit": {
-          "min": 0,
-          "max": 999999999,
-          "threshold": 0,
-          "expo_factor": 1,
-          "point_weight": 0
-        },
-        "Spionagesonde": {
           "min": 0,
           "max": 1,
-          "threshold": 0,
-          "expo_factor": 1,
-          "point_weight": 0
-        },
-        "Todesstern": {
-          "min": 0,
-          "max": 999999999,
-          "threshold": 0,
-          "expo_factor": 1,
-          "point_weight": 0
-        },
-        "Zerstörer": {
-          "min": 0,
-          "max": 999999999,
           "threshold": 0,
           "expo_factor": 1,
           "point_weight": 0

@@ -16,10 +16,16 @@ from Classes.Coordinate import Coordinate
 from Resources.Static_Information.Constants import mission_type_ids
 
 
+def get_config(uni):
+    with open('Config/Expeditions_Config.json', encoding="utf-8") as f:
+        d = json.load(f)
+    return d[uni]
+
+
 class Expedition:
 
     def __init__(self, uni):
-        self.config = self.get_config(uni)
+        self.config = get_config(uni)
         self.acc = Account(uni, self.config["username"], self.config["password"])
         self.possible_expos = 0
         self.possible_fleets = 0
@@ -60,11 +66,6 @@ class Expedition:
             except Exception as e:
                 traceback.print_exc()
                 pass
-
-    def get_config(self, uni):
-        with open('Config/Expeditions_Config.json', encoding="utf-8") as f:
-            d = json.load(f)
-        return d[uni]
 
     def chk_for_open_slot(self):
         self.acc.read_in_mission_count()
