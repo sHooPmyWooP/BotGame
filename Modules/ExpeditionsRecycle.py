@@ -83,11 +83,11 @@ class ExpeditionRecycle:
         ships_send.append([pathfinder, int(count_send)])
 
         if count_send:
-            response = planet.send_fleet(mission_type_ids.expedition,
+            response = planet.send_fleet(mission_type_ids.recycle,
                                          Coordinate(planet.coordinates.galaxy, planet.coordinates.system, 16),
                                          ships_send,
                                          resources=[0, 0, 0], speed=10,
-                                         holdingtime=1)
+                                         holdingtime=0)
         else:  # No ships available for expo
             raise AttributeError
 
