@@ -7,9 +7,18 @@ from time import sleep
 
 import pause
 
-from Modules.Classes.Account import Account
-from Modules.Classes.Coordinate import Coordinate
-from Modules.Resources.Static_Information.Constants import mission_type_ids
+try:
+    from Modules.Classes.Account import Account
+except ModuleNotFoundError:
+    from Classes.Account import Account
+try:
+    from Modules.Classes.Coordinate import Coordinate
+except ModuleNotFoundError:
+    from Classes.Coordinate import Coordinate
+try:
+    from Modules.Resources.Static_Information.Constants import mission_type_ids
+except ModuleNotFoundError:
+    from Resources.Static_Information.Constants import mission_type_ids
 
 
 def get_config(uni):
