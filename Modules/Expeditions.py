@@ -3,18 +3,17 @@ import json
 import random
 import sys
 import traceback
+from os import path
 from time import sleep
 
 import pause
 
-try:
-    from Modules.Classes.Account import Account
-except ModuleNotFoundError:
-    from Classes.Account import Account
-try:
-    from Modules.Classes.Coordinate import Coordinate
-except ModuleNotFoundError:
-    from Classes.Coordinate import Coordinate
+sys.path.append(
+    path.dirname(path.dirname(path.abspath(__file__))))  # necessary to make the file structure work on raspi
+
+from Modules.Classes.Account import Account
+from Modules.Classes.Coordinate import Coordinate
+
 try:
     from Modules.Resources.Static_Information.Constants import mission_type_ids
 except ModuleNotFoundError:
