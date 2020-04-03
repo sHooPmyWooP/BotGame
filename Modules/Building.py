@@ -79,7 +79,7 @@ def thread_building(planet):
 
 wait_factor = 5
 a1 = Account("Octans", "david-achilles@hotmail.de", "OGame!4friends")
-a1.read_in_all_planets()
+a1.read_in_all_celestials()
 for i, planet in enumerate(a1.planets):
     print(i, planet)
 

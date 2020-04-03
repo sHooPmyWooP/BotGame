@@ -16,55 +16,35 @@ except ModuleNotFoundError:
 from .Building import Building
 from .Coordinate import Coordinate, Destination
 from .Defense import Defense
-from .Moon import Moon
 from .Resources import Resources
 from .Ship import Ship
 
 
-class Planet:
-    """
-    Represents one Planet with relation to one account.
-    """
-
+class Celestial:
     def __init__(self, acc, id):
         """
-        :param acc: Account (associated with the Planet)
-        :param id: int (ID of the Planet)
-        self.buildings = Dict of Buildings accessible e.g. as self.buildings["Metallmine"]
-        self.ships = Dict of Ships accessible e.g. as self.ships["Kleiner Transporter"]
-        self.defenses = Dict of Defenses accessible e.g. as self.defenses["Kleiner Transporter"]
-        self.coordinates = [0, 0, 0]
-        self.fields = used / total
-        self.temps = []  # min / max
-        self.resources = Resources()
-        self.energy = 0
+
+        :param acc:
+        :param id:
         """
         self.acc = acc
+        self.id = id
         self.buildings = {}
         self.ships = {}
         self.defenses = {}
-        self.id = id
         self.coordinates = Coordinate(0, 0, 0, Destination.Planet)
         self.fields = [0, 0]  # used / total
-        self.temperature = []  # min / max
         self.resources = Resources()
         self.energy = 0
+        self.reader = CelestialReader(self)
         self.name = ""
-        self.moon = None
-
-        self.reader = PlanetReader(self)
-
+        self.is_moon = False
         #####
         # Building Construction Costs & Times
         #####
         for building in self.buildings:
             self.buildings[building].set_construction_cost()
             self.buildings[building].set_construction_time()
-            print(self.name, self.buildings[building].name, self.buildings[building].level,
-                  self.buildings[building].construction_finished_in_seconds)
-
-    def __repr__(self):
-        return self.name + " id:" + str(self.id)
 
     def build_defense_routine(self, multiplier=1):
         """
@@ -161,7 +141,7 @@ class Planet:
                                          headers={'X-Requested-With': 'XMLHttpRequest'}).json()
         if response["success"]:
             print("----------")
-            print(self.name, "Mission started:", mission_id, coords)
+            print(self.id, "Mission started:", mission_id, coords)
             for ship in ships:
                 print("{:.<22}".format(ship[0].name) + " -> amount: " + '{: >10}'.format(ship[1]))
             print("----------")
@@ -174,66 +154,96 @@ class Planet:
                 "error"] == 4017:  # message = 'Das Ziel kann nicht angeflogen werden. Du musst zuerst Astrophysik erforschen.'
                 print("Das Ziel kann nicht angeflogen werden. Du musst zuerst Astrophysik erforschen.")
                 return [False, 4]
+            elif response["errors"][0][
+                "error"] == 4032:  # message = 'Kein gültiges Expeditionsziel'
+                print("Kein gültiges Expeditionsziel.")
+                return [False, 5]
 
 
-class PlanetReader:
-    def __init__(self, planet):
-        self.planet = planet
+class CelestialReader:
+    def __init__(self, celestial):
+        self.celestial = celestial
 
     def read_all(self):
-        self.read_planet_infos()
+        self.read_base_infos()
         self.read_resources_and_energy()
         self.read_supply_buildings()
         self.read_facility_buildings()
         self.read_fleet()
         self.read_defenses()
-        for building in self.planet.buildings:
-            self.planet.buildings[building].set_construction_cost()
-            self.planet.buildings[building].set_construction_time()
+        for building in self.celestial.buildings:
+            self.celestial.buildings[building].set_construction_cost()
+            self.celestial.buildings[building].set_construction_time()
 
-    def read_planet_infos(self):
-        response = self.planet.acc.session.get('https://s{}-{}.ogame.gameforge.com/game/index.php?'
-                                               'page=ingame&component=overview'
-                                               .format(self.planet.acc.server_number,
-                                                       self.planet.acc.server_language)).text
+    def read_base_infos(self):
+        self.check_if_moon(
+            self.get_overview_soup())  # determine weather celestial is moon or planet due to different soup
+        self.read_base_infos_moon() if self.celestial.is_moon else self.read_base_infos_planet()
+
+    def get_overview_soup(self):
+        response = self.celestial.acc.session.get('https://s{}-{}.ogame.gameforge.com/game/index.php?'
+                                                  'page=ingame&component=overview'
+                                                  .format(self.celestial.acc.server_number,
+                                                          self.celestial.acc.server_language)).text
         soup = BeautifulSoup(response, features="html.parser")
+        return soup
 
-        for result in soup.findAll("div", {"id": 'planet-' + str(self.planet.id)}):
+    def check_if_moon(self, soup):
+        if soup.findAll("div", {"id": 'planet-' + str(self.celestial.id)}):
+            self.celestial.is_moon = False
+            return False
+        else:
+            self.celestial.is_moon = True
+            return True
+
+    def read_base_infos_planet(self):
+        soup = self.get_overview_soup()
+        for result in soup.findAll("div", {"id": 'planet-' + str(self.celestial.id)}):
             # Coordinates
             for coord in result.findAll("span", {"class": "planet-koords"}):
                 coord = coord.text.split(":")
-
                 for i, x in enumerate(coord):
                     coord[i] = x.replace("[", "").replace("]", "")
+                destination = 2 if self.celestial.is_moon else 1
+                self.celestial.coordinates = Coordinate(coord[0], coord[1], coord[2], destination)
 
-                self.planet.coordinates = Coordinate(coord[0], coord[1], coord[2], 1)
+                # Name
+                for name in result.findAll("img", {"class": "planetPic"}):
+                    self.celestial.name = name["alt"]
 
-            # Name
-            for name in result.findAll("img", {"class": "planetPic"}):
-                self.planet.name = name["alt"]
             # Fields
             for res in result.findAll("a", {"class": "planetlink"}):
-                self.planet.fields = re.search("\(\d*\/\d*\)", res["title"]).group(0).replace("(", "").replace(")",
-                                                                                                               "").split(
+                self.celestial.fields = re.search("\(\d*\/\d*\)", res["title"]).group(0).replace("(", "").replace(")",
+                                                                                                                  "").split(
                     "/")
             # Temperature
             for res in result.findAll("a", {"class": "planetlink"}):
                 temp = re.search("-?\d+ °C [a-zA-Z]* -?\d+", res["title"]).group(0)
                 temp = re.findall("-?\d+", temp)
-                self.planet.temperature = temp
+                self.celestial.temperature = temp
 
-            # Moon
-            try:
-                moon = result.find("a", {"class": "moonlink"})
-                moon_id = re.search("\d+", re.search("cp=\d+", moon["title"]).group(0)).group(0)
-                self.planet.moon = Moon(moon_id, self.planet, moon["data-jumpgatelevel"])
-            except TypeError:  # planet has no moon
-                pass
+    def read_base_infos_moon(self):
+        soup = self.get_overview_soup()
+        for result in soup.find_all("a",
+                                    {"class": "moonlink",
+                                     "href": f"https://s{self.celestial.acc.server_number}-{self.celestial.acc.server_language}.ogame.gameforge.com/game/index.php?page=ingame&component=overview&cp={self.celestial.id}"}):
+            # Coordinates
+            coord = re.search("\[\d+:\d+:\d+\]", result["title"]).group(0).replace("[", "").replace("]", "").split(":")
+
+            self.celestial.coordinates = Coordinate(coord[0], coord[1], coord[2], 2)
+
+            # Name
+            self.celestial.name = str(self.celestial.coordinates) + " - Moon"
+
+            # Fields
+            self.celestial.fields = re.search("\(\d+/\d+\)", result["title"]).group(0).replace("(", "").replace(")",
+                                                                                                                "").split(
+                "/")
 
     def read_resources_and_energy(self):
-        response = self.planet.acc.session.get(
+        response = self.celestial.acc.session.get(
             'https://s{}-{}.ogame.gameforge.com/game/index.php?page=resourceSettings&cp={}'
-                .format(self.planet.acc.server_number, self.planet.acc.server_language, self.planet.id)).text
+                .format(self.celestial.acc.server_number, self.celestial.acc.server_language, self.celestial.id)).text
         resources_names = ['metal', 'crystal', 'deuterium']
         # soup = BeautifulSoup(response, features="html.parser")
 
@@ -243,21 +253,22 @@ class PlanetReader:
                 value_string = re.search(marker_string, response).group(0)  # <span id="resources_{}" data-raw=12345
                 value = int(re.search("\d+", value_string).group(0))  # 12345
                 # value = int(response.split(marker_string)[1].split('>')[1].split('<')[0].split(',')[0].replace('.', ''))
-                self.planet.resources.set_value(value, name)
+                self.celestial.resources.set_value(value, name)
             except IndexError as e:
                 print(response)
-                print(self.planet.name, name, e)
+                print(self.celestial.name, name, e)
                 pass  # Resource-Value = 0 and therefor not in string
         # Energy
         marker_string = '<span id="resources_energy" data-raw='
         value = int(response.split(marker_string)[1].split('>')[1].split('<')[0].split(',')[0].replace('.', ''))
-        self.planet.energy = value
+        self.celestial.energy = value
 
     def read_supply_buildings(self):
-        response = self.planet.acc.session.get('https://s{}-{}.ogame.gameforge.com/game/index.php?page=ingame&'
-                                               'component=supplies&cp={}'
-                                               .format(self.planet.acc.server_number, self.planet.acc.server_language,
-                                                       self.planet.id)).text
+        response = self.celestial.acc.session.get('https://s{}-{}.ogame.gameforge.com/game/index.php?page=ingame&'
+                                                  'component=supplies&cp={}'
+                                                  .format(self.celestial.acc.server_number,
+                                                          self.celestial.acc.server_language,
+                                                          self.celestial.id)).text
         soup = BeautifulSoup(response, features="html.parser")
 
         for result in soup.findAll("ul", {"id": 'producers'}):
@@ -267,18 +278,19 @@ class PlanetReader:
                 is_possible = True if building["data-status"] == "on" else False
                 in_construction = True if building["data-status"] == "active" else False
                 construction_finished_in_seconds = int(building["data-total"]) if in_construction else 0
-                self.planet.buildings[building['aria-label']] = Building(building['aria-label'],
-                                                                         building['data-technology'],
-                                                                         level[0], "supplies", is_possible,
-                                                                         in_construction,
-                                                                         construction_finished_in_seconds,
-                                                                         self.planet)
+                self.celestial.buildings[building['aria-label']] = Building(building['aria-label'],
+                                                                            building['data-technology'],
+                                                                            level[0], "supplies", is_possible,
+                                                                            in_construction,
+                                                                            construction_finished_in_seconds,
+                                                                            self.celestial)
 
     def read_facility_buildings(self):
-        response = self.planet.acc.session.get('https://s{}-{}.ogame.gameforge.com/game/index.php?page=ingame&'
-                                               'component=facilities&cp={}'
-                                               .format(self.planet.acc.server_number, self.planet.acc.server_language,
-                                                       self.planet.id)).text
+        response = self.celestial.acc.session.get('https://s{}-{}.ogame.gameforge.com/game/index.php?page=ingame&'
+                                                  'component=facilities&cp={}'
+                                                  .format(self.celestial.acc.server_number,
+                                                          self.celestial.acc.server_language,
+                                                          self.celestial.id)).text
         soup = BeautifulSoup(response, features="html.parser")
         for result in soup.findAll("div", {"id": 'technologies'}):
             for building in result.findAll("li", {"class": "technology"}):
@@ -287,33 +299,35 @@ class PlanetReader:
                 is_possible = True if 'data-status="on"' in building else False
                 in_construction = True if 'data-status="active"' in building else False
                 construction_finished_in_seconds = int(building["data-total"]) if in_construction else 0
-                self.planet.buildings[building['aria-label']] = Building(building['aria-label'],
-                                                                         building['data-technology'],
-                                                                         level[0], "facilities", is_possible,
-                                                                         in_construction,
-                                                                         construction_finished_in_seconds,
-                                                                         self.planet)
+                self.celestial.buildings[building['aria-label']] = Building(building['aria-label'],
+                                                                            building['data-technology'],
+                                                                            level[0], "facilities", is_possible,
+                                                                            in_construction,
+                                                                            construction_finished_in_seconds,
+                                                                            self.celestial)
 
     def read_fleet(self, read_moon=False):
-        id = self.planet.id if not read_moon else self.planet.moon.id
-        response = self.planet.acc.session.get('https://s{}-{}.ogame.gameforge.com/game/index.php?page=ingame&'
-                                               'component=shipyard&cp={}'
-                                               .format(self.planet.acc.server_number, self.planet.acc.server_language,
-                                                       id)).text
+        id = self.celestial.id if not read_moon else self.celestial.moon.id
+        response = self.celestial.acc.session.get('https://s{}-{}.ogame.gameforge.com/game/index.php?page=ingame&'
+                                                  'component=shipyard&cp={}'
+                                                  .format(self.celestial.acc.server_number,
+                                                          self.celestial.acc.server_language,
+                                                          id)).text
         soup = BeautifulSoup(response, features="html.parser")
         for ship in soup.find_all("li", {"class": "technology"}):
             try:
                 count = int(ship.text)
             except ValueError:  # Ships currently build - refer to currently accessible amount
                 count = ship.text.split("\n")[-1].strip()  # get last element of list
-            self.planet.ships[ship['aria-label']] = Ship(ship['aria-label'], ship['data-technology'],
-                                                         count, self)
+            self.celestial.ships[ship['aria-label']] = Ship(ship['aria-label'], ship['data-technology'],
+                                                            count, self)
 
     def read_defenses(self):
-        response = self.planet.acc.session.get('https://s{}-{}.ogame.gameforge.com/game/index.php?page=ingame&'
-                                               'component=defenses&cp={}'
-                                               .format(self.planet.acc.server_number, self.planet.acc.server_language,
-                                                       self.planet.id)).text
+        response = self.celestial.acc.session.get('https://s{}-{}.ogame.gameforge.com/game/index.php?page=ingame&'
+                                                  'component=defenses&cp={}'
+                                                  .format(self.celestial.acc.server_number,
+                                                          self.celestial.acc.server_language,
+                                                          self.celestial.id)).text
         soup = BeautifulSoup(response, features="html.parser")
         for result in soup.findAll("div", {"id": 'technologies'}):
             for defense in result.find_all("li", {"class": "technology"}):
@@ -321,15 +335,16 @@ class PlanetReader:
                     count = int(defense.text.replace(".", ""))
                 except ValueError:  # Ships currently build - refer to currently accessible amount
                     count = defense.text.split("\n")[-1].strip()  # get last element of list
-                self.planet.defenses[defense['aria-label']] = Defense(defense['aria-label'], defense['data-technology'],
-                                                                      count, self.planet)
+                self.celestial.defenses[defense['aria-label']] = Defense(defense['aria-label'],
+                                                                         defense['data-technology'],
+                                                                         count, self.celestial)
         queue = soup.find("table", {"class": "queue"})
 
         # Building Queue
         try:
             for defense in queue.find_all("td"):
                 img = defense.find("img")
-                self.planet.defenses[img["title"]].set_in_construction_count(defense.text.strip())
+                self.celestial.defenses[img["title"]].set_in_construction_count(defense.text.strip())
         except AttributeError as e:
             pass
 
@@ -338,14 +353,31 @@ class PlanetReader:
             active = soup.find("table", {"class": "construction active"})
             active_name = active.find("th", {"colspan": "2"})
             active_construction = soup.find("div", {"class": "shipSumCount"})
-            self.planet.defenses[active_name.contents[0]].in_construction_count += int(active_construction.text)
+            self.celestial.defenses[active_name.contents[0]].in_construction_count += int(active_construction.text)
         except AttributeError as e:
             pass
 
-        def get_moon(self):
-            moon_ids = []
-            marker_string = 'data-jumpgateLevel'
-            for planet_id in re.finditer(marker_string, self.session.content):
-                id = self.session.content[planet_id.start() - 41:planet_id.end() - 51]
-                moon_ids.append(int(id))
-            return moon_ids
+
+class Planet(Celestial):
+    """
+    Represents one Planet with relation to one account.
+    """
+
+    def __init__(self, acc, id):
+        super().__init__(acc, id)
+        self.temperature = []  # min / max
+
+    def __repr__(self):
+        return self.name + " id:" + str(self.id)
+
+
+class Moon(Celestial):
+    """
+    Represents one Moon with relation to one account
+    """
+
+    def __init__(self, acc, id):
+        super().__init__(acc, id)
+
+    def __repr__(self):
+        return str(self.coordinates) + " (Moon) id:" + str(self.id)

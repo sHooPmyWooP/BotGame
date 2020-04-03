@@ -11,7 +11,7 @@ def safety_module(acc, time_to_sleep):
         try:
             acc.login()
             if acc.chk_get_attacked():
-                acc.read_in_all_planets_basics()
+                acc.read_in_all_celestial_basics()
                 acc.read_missions()
                 target_coords = []
                 planets = []

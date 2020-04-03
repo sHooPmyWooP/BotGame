@@ -24,10 +24,10 @@ try:  # OGameAPI
     from .OGameAPI import OGameAPI
 except ModuleNotFoundError:
     from Modules.Classes.OGameAPI import OGameAPI
-try:  # Planet
-    from .Planet import Planet
+try:  # Celestial
+    from .Celestial import Planet, Moon, Celestial
 except ModuleNotFoundError:
-    from Modules.Classes.Planet import Planet
+    from Modules.Classes.Celestial import Planet, Moon, Celestial
 try:  # Research
     from .Research import Research
 except ModuleNotFoundError:
@@ -52,10 +52,12 @@ class Account:
         self.server_name = ""
         self.server_settings = {}
         self.planets = []
+        self.moons = []
         self.research = {}
         self.ogame_api = None
         self.spy_messages = {}
         self.planet_ids = []
+        self.moon_ids = []
         self.expo_count = [0, 0]  # current/max
         self.fleet_count = [0, 0]  # current/max
         self.offers_count = [0, 0]  # current/max
@@ -163,19 +165,23 @@ class Account:
                 except AttributeError:  # this is not the span we're looking for
                     pass
 
-    def read_in_all_planets(self):
-        for planetId in self.get_planet_ids():
-            planet = Planet(self, planetId)
-            planet.reader.read_all()
-            self.planets.append(planet)
-            print('Planet ' + planet.name + ' with id ' + str(planet.id) + ' was added')
+    def read_in_all_celestials(self, planets=True):
+        ids = self.get_planet_ids() if planets else self.get_moon_ids()
+        for id in ids:
+            celestial = Celestial(self, id)
+            celestial.reader.read_all()
+            self.planets.append(celestial) if planets else self.moons.append(celestial)
+            print(celestial.name + ' with id ' + str(celestial.id) + ' was added')
 
-    def read_in_planet(self, planetId):
-        planet = Planet(self, planetId)
-        planet.reader.read_all()
-        self.planets.append(planet)
-        print('Planet ' + planet.name + ' with id ' + str(planet.id) + ' was added')
-        return planet
+    def read_in_celestial(self, id):
+        celestial = Celestial(self, id)
+        celestial.reader.read_all()
+        if not celestial.is_moon:
+            self.planets.append(celestial)
+        else:
+            self.moons.append(celestial)
+        print('Celestial ' + celestial.name + ' with id ' + str(celestial.id) + ' was added')
+        return celestial
 
     def get_planet_ids(self):
         planet_ids = []
@@ -186,6 +192,16 @@ class Account:
         self.planet_ids = planet_ids
         return planet_ids
 
+    def get_moon_ids(self):
+        moon_ids = []
+        soup = BeautifulSoup(self.session.content, features="html.parser")
+        moon_elements = soup.find_all("a", {"class": "moonlink"})
+        for moon in moon_elements:
+            id = re.search("cp=\d+", str(moon)).group(0).split("cp=")[1]
+            moon_ids.append(int(id))
+        self.moon_ids = moon_ids
+        return moon_ids
+
     def init_planets(self):
         planets = self.get_planet_ids()
         for id in planets:
@@ -195,18 +211,20 @@ class Account:
             else:
                 self.planets.append(Planet(self, id))
         for planet in self.planets:
-            planet.reader.read_planet_infos()
+            planet.reader.read_base_infos_planet()
 
-    def read_in_all_planets_basics(self):
-        for planetId in self.get_planet_ids():
-            planet = Planet(self, planetId)
-            planet.reader.read_planet_infos()
-            self.planets.append(planet)
+    def read_in_all_celestial_basics(self):
+        ids = self.get_planet_ids() + self.get_moon_ids()
+        for id in ids:
+            celestial = Celestial(self, id)
+            celestial.reader.read_base_infos()
+            self.planets.append(celestial) if not celestial.is_moon else self.moons.append(celestial)
 
     def read_in_all_fleets(self):
         for planet in self.planets:
             planet.reader.read_fleet()
-            #  print(planet.name,planet.ships)
+        for moon in self.moons:
+            moon.reader.read_fleet()
 
     def get_init_chat_token(self):
         marker_string = 'var ajaxChatToken = '
@@ -302,7 +320,6 @@ class Account:
 
 if __name__ == "__main__":
     a1 = Account(universe="Octans", username="strabbit@web.de", password="OGame!4friends")
-    a1.read_in_all_planets_basics()
-    for planet in a1.planets:
-        print(planet.Moon)
+    m1 = a1.read_in_celestial(33735077)
+    m1.send_fleet(15, Coordinate(1, 412, 16), [[m1.ships["Großer Transporter"], 1]], holdingtime=1)
     print("Done...")
