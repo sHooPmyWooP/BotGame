@@ -7,12 +7,31 @@ from bs4 import BeautifulSoup
 
 sys.path.append(
     path.dirname(path.dirname(path.abspath(__file__))))  # necessary to make the file structure work on raspi
-from .Coordinate import Coordinate
-from .Message import SpyMessage
-from .Mission import Mission
-from .OGame_API import OGameAPI
-from .Planet import Planet
-from .Research import Research
+
+try:  # Coordinate
+    from .Coordinate import Coordinate
+except ModuleNotFoundError:
+    from Modules.Classes.Coordinate import Coordinate
+try:  # SpyMessage
+    from .Message import SpyMessage
+except ModuleNotFoundError:
+    from Modules.Classes.Message import SpyMessage
+try:  # Mission
+    from .Mission import Mission
+except ModuleNotFoundError:
+    from Modules.Classes.Mission import Mission
+try:  # OGameAPI
+    from .OGameAPI import OGameAPI
+except ModuleNotFoundError:
+    from Modules.Classes.OGameAPI import OGameAPI
+try:  # Planet
+    from .Planet import Planet
+except ModuleNotFoundError:
+    from Modules.Classes.Planet import Planet
+try:  # Research
+    from .Research import Research
+except ModuleNotFoundError:
+    from Modules.Classes.Research import Research
 
 
 class Account:
