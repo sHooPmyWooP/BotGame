@@ -9,8 +9,8 @@ from .Coordinate import Coordinate
 from .Message import SpyMessage
 from .Mission import Mission
 from .OGame_API import OGameAPI
-from Modules.Classes import Planet
-from Modules.Classes import Research
+from .Planet import Planet
+from .Research import Research
 
 
 class Account:

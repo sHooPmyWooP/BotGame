@@ -1,12 +1,9 @@
 import datetime
 import json
 import sys
-from os import path
 from time import sleep
 
-sys.path.append(
-    path.dirname(path.dirname(path.abspath(__file__))))  # necessary to make the file structure work on raspi
-from Modules.Classes import Account
+from Modules.Classes.Account import Account
 
 
 def safety_module(acc, time_to_sleep):

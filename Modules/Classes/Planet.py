@@ -3,11 +3,7 @@ import re
 
 from bs4 import BeautifulSoup
 
-"""
-sys.path.append(
-    path.dirname(path.dirname(path.abspath(__file__))))  # necessary to make the file structure work on raspi
-"""
-from .Constants import mission_type_ids
+from Modules.Resources.Static_Information.Constants import mission_type_ids
 from .Building import Building
 from .Coordinate import Coordinate, Destination
 from .Defense import Defense

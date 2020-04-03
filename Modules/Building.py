@@ -3,7 +3,7 @@ import time
 import traceback
 from concurrent.futures import ThreadPoolExecutor
 
-from Modules.Classes import Account
+from Modules.Classes.Account import Account
 
 
 def build_next(planet):

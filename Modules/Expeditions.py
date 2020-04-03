@@ -7,9 +7,9 @@ from time import sleep
 
 import pause
 
+from Modules.Classes.Account import Account
+from Modules.Classes.Coordinate import Coordinate
 from Modules.Resources.Static_Information.Constants import mission_type_ids
-from .Classes.Account import Account
-from .Classes.Coordinate import Coordinate
 
 
 def get_config(uni):
@@ -149,7 +149,7 @@ class Expedition:
 
 
 if __name__ == "__main__":
-    uni = sys.argv[1]
-    e = Expedition(uni)
+    universe = sys.argv[1]
+    e = Expedition(universe)
     e.thread_expos()
     print("Done...")

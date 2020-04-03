@@ -2,16 +2,12 @@ import datetime
 import json
 import sys
 import traceback
-from os import path
 from time import sleep
 
 import pause
 
-sys.path.append(
-    path.dirname(path.dirname(path.abspath(__file__))))  # necessary to make the file structure work on raspi
-
-from Modules.Classes import Account
-from Modules.Classes import Coordinate
+from Modules.Classes.Account import Account
+from Modules.Classes.Coordinate import Coordinate
 from Modules.Resources.Static_Information.Constants import mission_type_ids
 
 

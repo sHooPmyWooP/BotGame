@@ -7,5 +7,5 @@ class Research:
         self.is_possible = is_possible
         self.in_construction = in_construction
 
-    def researcH(self):
+    def research(self):
         pass
