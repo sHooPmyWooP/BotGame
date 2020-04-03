@@ -1,9 +1,18 @@
 import os
 import re
+import sys
+from os import path
 
 from bs4 import BeautifulSoup
 
-from Modules.Resources.Static_Information.Constants import mission_type_ids
+sys.path.append(
+    path.dirname(path.dirname(path.abspath(__file__))))  # necessary to make the file structure work on raspi
+
+try:
+    from Modules.Resources.Static_Information.Constants import mission_type_ids
+except ModuleNotFoundError:
+    from Resources.Static_Information.Constants import mission_type_ids
+
 from .Building import Building
 from .Coordinate import Coordinate, Destination
 from .Defense import Defense
