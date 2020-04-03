@@ -202,16 +202,15 @@ class Account:
         self.moon_ids = moon_ids
         return moon_ids
 
-    def init_planets(self):
-        planets = self.get_planet_ids()
-        for id in planets:
-            for planet in self.planets:
-                if planet.id == id:
+    def init_celestials(self):
+        for id in self.get_planet_ids() + self.get_moon_ids():
+            for celestial in self.planets + self.moons:
+                if celestial.id == id:
                     break
             else:
-                self.planets.append(Planet(self, id))
-        for planet in self.planets:
-            planet.reader.read_base_infos_planet()
+                celestial = Celestial(self, id)
+                celestial.reader.read_base_infos()
+                self.planets.append(celestial) if not celestial.is_moon else self.moons.append(celestial)
 
     def read_in_all_celestial_basics(self):
         ids = self.get_planet_ids() + self.get_moon_ids()

@@ -102,7 +102,7 @@ class ExpeditionRecycle:
                 self.fleet_gestartet = False
                 self.possible_fleets = 1
                 self.acc.login()
-                self.acc.init_planets()
+                self.acc.init_celestials()
                 while self.possible_fleets > 0:
                     if not self.chk_for_open_slot():
                         raise AssertionError("No slot available yet, sleeping")
