@@ -10,9 +10,9 @@ import pause
 sys.path.append(
     path.dirname(path.dirname(path.abspath(__file__))))  # necessary to make the file structure work on raspi
 
-from Classes.Account import Account
-from Classes.Coordinate import Coordinate
-from Resources.Static_Information.Constants import mission_type_ids
+from Modules.Classes import Account
+from Modules.Classes import Coordinate
+from Modules.Resources.Static_Information.Constants import mission_type_ids
 
 
 def get_config(uni):

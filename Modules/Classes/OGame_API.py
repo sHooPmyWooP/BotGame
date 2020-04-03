@@ -4,7 +4,7 @@ from datetime import datetime
 
 import requests
 
-from Classes.PlanetEnemy import PlanetEnemy
+from .PlanetEnemy import PlanetEnemy
 
 
 class OGameAPI:

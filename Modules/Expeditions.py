@@ -3,17 +3,13 @@ import json
 import random
 import sys
 import traceback
-from os import path
 from time import sleep
 
 import pause
 
-sys.path.append(
-    path.dirname(path.dirname(path.abspath(__file__))))  # necessary to make the file structure work on raspi
-
-from Classes.Account import Account
-from Classes.Coordinate import Coordinate
-from Resources.Static_Information.Constants import mission_type_ids
+from Modules.Resources.Static_Information.Constants import mission_type_ids
+from .Classes.Account import Account
+from .Classes.Coordinate import Coordinate
 
 
 def get_config(uni):

@@ -1,20 +1,19 @@
 import os
 import re
-import sys
-from os import path
 
 from bs4 import BeautifulSoup
 
-from Resources.Static_Information.Constants import mission_type_ids
-
+"""
 sys.path.append(
     path.dirname(path.dirname(path.abspath(__file__))))  # necessary to make the file structure work on raspi
-from Classes.Building import Building
-from Classes.Coordinate import Coordinate, Destination
-from Classes.Defense import Defense
-from Classes.Moon import Moon
-from Classes.Resources import Resources
-from Classes.Ship import Ship
+"""
+from .Constants import mission_type_ids
+from .Building import Building
+from .Coordinate import Coordinate, Destination
+from .Defense import Defense
+from .Moon import Moon
+from .Resources import Resources
+from .Ship import Ship
 
 
 class Planet:

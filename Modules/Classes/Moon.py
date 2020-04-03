@@ -1,4 +1,6 @@
-from Classes.Coordinate import Coordinate, Destination
+from bs4 import BeautifulSoup
+
+from .Coordinate import Coordinate, Destination
 
 
 class Moon:
@@ -8,6 +10,9 @@ class Moon:
         self.jumpgate = jumpgate
         self.coords = Coordinate(planet.coordinates.galaxy, planet.coordinates.system, planet.coordinates.position,
                                  Destination.Moon)
+
+    def __repr__(self):
+        return self.planet.name + "(Moon) id:" + str(self.id)
 
     def read_fleet(self, read_moon=False):
         response = self.planet.acc.session.get('https://s{}-{}.ogame.gameforge.com/game/index.php?page=ingame&'

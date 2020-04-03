@@ -1,8 +1,8 @@
 import re
 import sqlite3
 
-from Classes.Coordinate import Coordinate
-from Classes.Resources import Resources
+from .Coordinate import Coordinate
+from .Resources import Resources
 
 
 class Message:

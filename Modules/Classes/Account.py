@@ -1,18 +1,16 @@
 import re
-import sys
-from os import path
 
 import requests
 from bs4 import BeautifulSoup
 
-sys.path.append(
-    path.dirname(path.dirname(path.abspath(__file__))))  # necessary to make the file structure work on raspi
-from Classes.Coordinate import Coordinate
-from Classes.Message import SpyMessage
-from Classes.Mission import Mission
-from Classes.OGame_API import OGameAPI
-from Classes.Planet import Planet
-from Classes.Research import Research
+"""sys.path.append(
+    path.dirname(path.dirname(path.abspath(__file__))))  # necessary to make the file structure work on raspi"""
+from .Coordinate import Coordinate
+from .Message import SpyMessage
+from .Mission import Mission
+from .OGame_API import OGameAPI
+from Modules.Classes import Planet
+from Modules.Classes import Research
 
 
 class Account:
@@ -283,7 +281,7 @@ class Account:
 
 if __name__ == "__main__":
     a1 = Account(universe="Octans", username="strabbit@web.de", password="OGame!4friends")
-    print(a1.chk_logged_in())
-    a1.logout()
-    print(a1.chk_logged_in())
+    a1.read_in_all_planets_basics()
+    for planet in a1.planets:
+        print(planet.Moon)
     print("Done...")

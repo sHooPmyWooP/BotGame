@@ -1,6 +1,7 @@
-from math import sqrt
-from Classes.Planet import Planet
 import random
+from math import sqrt
+
+from Modules.Classes import Planet
 
 
 def send_max_expeditions(acc):
