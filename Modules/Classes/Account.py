@@ -318,7 +318,16 @@ class Account:
 
 
 if __name__ == "__main__":
-    a1 = Account(universe="Octans", username="strabbit@web.de", password="OGame!4friends")
-    m1 = a1.read_in_celestial(33735077)
-    m1.send_fleet(15, Coordinate(1, 412, 16), [[m1.ships["Großer Transporter"], 1]], holdingtime=1)
+    a1 = Account(universe="Pasiphae", username="strabbit@web.de", password="OGame!4friends")
+    m1 = a1.read_in_celestial(33629496)
+    m1.send_fleet(15, Coordinate(5, 210, 16), [[m1.ships["Großer Transporter"], 163],
+                                               [m1.ships["Leichter Jäger"], 30],
+                                               [m1.ships["Schwerer Jäger"], 298],
+                                               [m1.ships["Kreuzer"], 67],
+                                               [m1.ships["Schlachtschiff"], 24],
+                                               [m1.ships["Recycler"], 17],
+                                               [m1.ships["Bomber"], 20],
+                                               [m1.ships["Zerstörer"], 1],
+                                               [m1.ships["Schlachtkreuzer"], 76],
+                                               [m1.ships["Reaper"], 3]], holdingtime=1)
     print("Done...")

@@ -17,7 +17,7 @@
         "Großer Transporter": {
           "min": 0,
           "max": 999999999999,
-          "threshold": 20,
+          "threshold": 0,
           "expo_factor": 1,
           "point_weight": 12
         },
@@ -86,7 +86,7 @@
         },
         "Schwerer Jäger": {
           "min": 0,
-          "max": 0,
+          "max": 99999,
           "threshold": 0,
           "expo_factor": 1,
           "point_weight": 0

@@ -356,6 +356,9 @@ class CelestialReader:
             self.celestial.defenses[active_name.contents[0]].in_construction_count += int(active_construction.text)
         except AttributeError as e:
             pass
+        except KeyError as e:
+            print(e,
+                  "KeyError     self.celestial.defenses[active_name.contents[0]].in_construction_count += int(active_construction.text)")
 
 
 class Planet(Celestial):
