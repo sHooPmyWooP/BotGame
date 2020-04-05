@@ -1,3 +1,5 @@
 /Modules/Resources/db/
 /venv
 /Modules/Config/Telegram_Config.json
+/Modules/Config/Expeditions_Config.json
+/Modules/Config/Safety_Config.json

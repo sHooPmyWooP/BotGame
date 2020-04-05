@@ -1,7 +1,7 @@
 {
   "Pasiphae": {
-    "username": "username",
-    "password": "password",
+    "username": "strabbit@web.de",
+    "password": "OGame!4friends",
     "config": {
       "min_over_threshold": true,
       "system_variance": 0,
@@ -123,8 +123,8 @@
     }
   },
   "Octans": {
-    "username": "username",
-    "password": "password",
+    "username": "strabbit@web.de",
+    "password": "OGame!4friends",
     "config": {
       "min_over_threshold": true,
       "system_variance": 0,
