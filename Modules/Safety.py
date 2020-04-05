@@ -22,7 +22,7 @@ class Safety():
             self.telegramBot = TelegramBot()
         except:
             self.telegramBot = None
-        self.attack_missions = {}
+        self.handeld_attacks = {}
 
     def safety_module(self):
         while True:
@@ -32,35 +32,36 @@ class Safety():
                     self.acc.read_in_all_celestial_basics()
                     self.acc.read_missions()
                     target_coords = []
-                    targeted_celestials = []
                     for mission in self.acc.missions:
                         if mission.hostile:
                             if mission.mission_type == mission_type_ids.attack:
-                                if mission.id not in self.attack_missions.keys():
-                                    self.attack_missions[mission.id] = mission
+                                if mission.id not in self.handeld_attacks.keys():
+                                    self.handeld_attacks[mission.id] = mission
                                     target_coords.append(mission.coord_to)
                                     for coord in target_coords:
                                         for celestial in self.acc.planets + self.acc.moons:
                                             if str(celestial.coordinates) == str(coord):
-                                                self.attack_missions[mission.id].attack_target = celestial
+                                                self.handeld_attacks[mission.id].attack_target = celestial
+                                                message = str(
+                                                    celestial.coordinates) + " is beeing attacked at " + mission.get_arrival_as_string()
+                                                print(message)
                                                 if self.telegramBot:
-                                                    self.telegramBot.send_message(
-                                                        str(celestial.coordinates) +
-                                                        " is beeing attacked at " +
-                                                        mission.get_arrival_as_string())
+                                                    self.telegramBot.send_message(message)
                     # for celestial in targeted_celestials:
                     #     celestial.reader.read_defenses()
                     #     celestial.build_defense_by_ratio()
                     #     celestial.build_defense_routine(1000)
+                    sleep_until = datetime.datetime.now() + datetime.timedelta(0, self.waiting_time)
+                    print("Sleep until next check:", sleep_until)
                     sleep(self.waiting_time)
                 else:
                     sleep_until = datetime.datetime.now() + datetime.timedelta(0, self.waiting_time)
                     print("No Attacks, sleep until:", sleep_until)
                     sleep(self.waiting_time)
             except Exception as e:
-                self.telegramBot.send_message(
-                    "Exception! Sleeping 60 Seconds before retry.\n Exception:" + str(e))
-                print("Exception! Sleeping 60 Seconds before retry.", e)
+                message = f"Exception! Sleeping {self.waiting_time} Seconds before retry.\n Exception:" + str(e)
+                self.telegramBot.send_message(message)
+                print(message)
                 sleep(self.waiting_time)
 
     @staticmethod
