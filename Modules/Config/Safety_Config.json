@@ -7,8 +7,8 @@
     }
   },
   "Octans": {
-    "username": "strabbit@web.de",
-    "password": "OGame!4friends",
+    "username": "username",
+    "password": "password",
     "config": {
       "waiting_time": 300
     }
