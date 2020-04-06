@@ -12,25 +12,37 @@ try:  # Coordinate
     from .Coordinate import Coordinate
 except ModuleNotFoundError:
     from Modules.Classes.Coordinate import Coordinate
+except ImportError:
+    from Modules.Classes.Coordinate import Coordinate
 try:  # SpyMessage
     from .Message import SpyMessage
 except ModuleNotFoundError:
+    from Modules.Classes.Message import SpyMessage
+except ImportError:
     from Modules.Classes.Message import SpyMessage
 try:  # Mission
     from .Mission import Mission
 except ModuleNotFoundError:
     from Modules.Classes.Mission import Mission
+except ImportError:
+    from Modules.Classes.Mission import Mission
 try:  # OGameAPI
     from .OGameAPI import OGameAPI
 except ModuleNotFoundError:
+    from Modules.Classes.OGameAPI import OGameAPI
+except ImportError:
     from Modules.Classes.OGameAPI import OGameAPI
 try:  # Celestial
     from .Celestial import Planet, Moon, Celestial
 except ModuleNotFoundError:
     from Modules.Classes.Celestial import Planet, Moon, Celestial
+except ImportError:
+    from Modules.Classes.Celestial import Planet, Moon, Celestial
 try:  # Research
     from .Research import Research
 except ModuleNotFoundError:
+    from Modules.Classes.Research import Research
+except ImportError:
     from Modules.Classes.Research import Research
 
 
@@ -318,7 +330,7 @@ class Account:
 
 
 if __name__ == "__main__":
-    a1 = Account(universe="Octans", username="strabbit@web.de", password="OGame!4friends")
+    a1 = Account(universe="Octans", username="nico.doehrn@gmail.com", password="Ogame4Friends")
     m1 = a1.read_in_celestial(33735077)
     m1.send_fleet(15, Coordinate(1, 412, 16), [[m1.ships["Großer Transporter"], 1]], holdingtime=1)
     print("Done...")
