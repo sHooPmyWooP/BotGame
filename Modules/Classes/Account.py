@@ -15,11 +15,11 @@ except ModuleNotFoundError:
 except ImportError:
     from Modules.Classes.Coordinate import Coordinate
 try:  # SpyMessage
-    from .Message import SpyMessage
+    from .Message import SpyMessage, ExpoMessage
 except ModuleNotFoundError:
-    from Modules.Classes.Message import SpyMessage
+    from Modules.Classes.Message import SpyMessage, ExpoMessage
 except ImportError:
-    from Modules.Classes.Message import SpyMessage
+    from Modules.Classes.Message import SpyMessage, ExpoMessage
 try:  # Mission
     from .Mission import Mission
 except ModuleNotFoundError:

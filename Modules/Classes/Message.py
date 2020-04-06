@@ -90,7 +90,7 @@ class SpyMessage(Message):
         self.delete_message()
 
     def push_spy_message_to_db(self):
-        conn = sqlite3.connect('Resources\db\spy_messages.db')
+        conn = sqlite3.connect('Resources/db/messages.db')
         c = conn.cursor()
         c.execute("""
         CREATE TABLE IF NOT EXISTS SPY_MESSAGES(
