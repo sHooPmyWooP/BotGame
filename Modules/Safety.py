@@ -4,45 +4,74 @@ import sys
 from time import sleep
 
 from Modules.Classes.Account import Account
+from Modules.Classes.TelegramBot import TelegramBot
+
+try:
+    from Modules.Resources.Static_Information.Constants import mission_type_ids
+except ModuleNotFoundError:
+    from Resources.Static_Information.Constants import mission_type_ids
 
 
-def safety_module(acc, time_to_sleep):
-    while True:
+class Safety():
+    def __init__(self, uni):
+        self.config = self.get_config(uni)
+        self.acc = Account(uni, self.config["username"], self.config["password"])
+        self.waiting_time = self.config["config"]["waiting_time"]
         try:
-            acc.login()
-            if acc.chk_get_attacked():
-                acc.read_in_all_celestial_basics()
-                acc.read_missions()
-                target_coords = []
-                planets = []
-                for mission in acc.missions:
-                    if mission.hostile:
-                        target_coords.append(mission.coord_to)
-                        for coord in target_coords:
-                            for planet in acc.planets:
-                                if str(planet.coordinates) == str(coord):
-                                    planets.append(planet)
-                for planet in planets:
-                    planet.reader.read_defenses()
-                    planet.build_defense_by_ratio()
-                    planet.build_defense_routine(1000)
-                sleep(time_to_sleep)
-            else:
-                sleep_until = datetime.datetime.now() + datetime.timedelta(0, time_to_sleep)
-                print("Sleep until:", sleep_until)
-                sleep(time_to_sleep)
-        except Exception as e:
-            print("Exception! Sleeping 60 Seconds before retry.", e)
-            sleep(time_to_sleep)
+            botConfig = open('Config/Telegram_Config.json', encoding="utf-8")  # check
+            self.telegramBot = TelegramBot()
+        except:
+            self.telegramBot = None
+        self.handeld_attacks = {}
 
+    def safety_module(self):
+        while True:
+            try:
+                self.acc.login()
+                if self.acc.chk_get_attacked():
+                    self.acc.read_in_all_celestial_basics()
+                    self.acc.read_missions()
+                    target_coords = []
+                    for mission in self.acc.missions:
+                        if mission.hostile:
+                            if mission.mission_type == mission_type_ids.attack:
+                                if mission.id not in self.handeld_attacks.keys():
+                                    self.handeld_attacks[mission.id] = mission
+                                    target_coords.append(mission.coord_to)
+                                    for coord in target_coords:
+                                        for celestial in self.acc.planets + self.acc.moons:
+                                            if str(celestial.coordinates) == str(coord):
+                                                self.handeld_attacks[mission.id].attack_target = celestial
+                                                message = str(
+                                                    celestial.coordinates) + " is beeing attacked at " + mission.get_arrival_as_string()
+                                                print(message)
+                                                if self.telegramBot:
+                                                    self.telegramBot.send_message(message)
+                    # for celestial in targeted_celestials:
+                    #     celestial.reader.read_defenses()
+                    #     celestial.build_defense_by_ratio()
+                    #     celestial.build_defense_routine(1000)
+                    sleep_until = datetime.datetime.now() + datetime.timedelta(0, self.waiting_time)
+                    print("Sleep until next check:", sleep_until)
+                    sleep(self.waiting_time)
+                else:
+                    sleep_until = datetime.datetime.now() + datetime.timedelta(0, self.waiting_time)
+                    print("No Attacks, sleep until:", sleep_until)
+                    sleep(self.waiting_time)
+            except Exception as e:
+                message = f"Exception! Sleeping {self.waiting_time} Seconds before retry.\n Exception:" + str(e)
+                self.telegramBot.send_message(message)
+                print(message)
+                sleep(self.waiting_time)
 
-def get_config(uni):
-    with open('Config/Safety_Config.json', encoding="utf-8") as f:
-        d = json.load(f)
-    return d[uni]
+    @staticmethod
+    def get_config(uni):
+        with open('Config/Safety_Config.json', encoding="utf-8") as f:
+            d = json.load(f)
+        return d[uni]
 
 
 if __name__ == "__main__":
-    uni = sys.argv[1]
-    config = get_config(uni)
-    safety_module(Account(uni, "strabbit@web.de", "OGame!4friends"), config["config"]["waiting_time"])
+    universe = sys.argv[1]
+    s = Safety(universe)
+    s.safety_module()

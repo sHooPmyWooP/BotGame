@@ -9,7 +9,6 @@ class Message:
     """
     represents one message from Inbox
     """
-
     def __init__(self, acc, msg):
         self.acc = acc
         self.id = msg["data-msg-id"]
@@ -23,7 +22,6 @@ class Message:
             "action": 103,
             "ajax": 1
         }
-
         delete = self.acc.session.post(
             f'https://s{self.acc.server_number}-{self.acc.server_language}.ogame.gameforge.com/game/index.php?page=messages',
             data=form_data)
@@ -62,10 +60,8 @@ class SpyMessage(Message):
                 result = re.search(f'{res_name}: \d+.?\d*', res.text)
                 try:
                     resources.append([result.group(0), res_name])
-                    # print(self.id, res,result.group(0))
                 except AttributeError:
                     pass
-                    # print(res_name,"not found in",res)
         for findings in resources:
             # get Type of Resource
             if findings[1] == "Metall":
@@ -80,7 +76,6 @@ class SpyMessage(Message):
                     amount = int(s.replace(".", ""))  # remove delimiter todo: check for millions etc.
                 except ValueError as e:
                     pass
-            # amount = re.search('\d+.?\d*',findings[0])
             self.resources.set_value(amount, type)
 
         # API Key
@@ -91,16 +86,16 @@ class SpyMessage(Message):
         api_key = api_key.split("'")[0]
         self.api_key = api_key
 
-        self.push_message_to_db()
+        self.push_spy_message_to_db()
         self.delete_message()
 
-    def push_message_to_db(self):
+    def push_spy_message_to_db(self):
         conn = sqlite3.connect('Resources\db\spy_messages.db')
         c = conn.cursor()
         c.execute("""
         CREATE TABLE IF NOT EXISTS SPY_MESSAGES(
         id integer primary key,
-        Spy_Timestmap text,
+        spy_timestmap text,
         msg_from text,
         target_coords text,
         resources text,
@@ -109,8 +104,35 @@ class SpyMessage(Message):
 
         statement = "INSERT OR REPLACE INTO 'SPY_MESSAGES' VALUES (?, ?, ?,?, ?, ?);"
         tuple = (
-        self.id, self.timestamp, self.msg_from, self.target_coords.get_coord_str(), self.resources.get_resources_str(),
-        self.api_key)
+            self.id, self.timestamp, self.msg_from, self.target_coords.get_coord_str(),
+            self.resources.get_resources_str(),
+            self.api_key)
+        c.execute(statement, tuple)
+        conn.commit()
+        conn.close()
+
+
+class ExpoMessage(Message):
+    def __init__(self, acc, msg):
+        super().__init__(acc, msg)
+        self.content = msg.find("span", {"class": "msg_content"}).text.strip()
+        self.push_expo_message_to_db()
+        self.delete_message()
+
+    def push_expo_message_to_db(self):
+        conn = sqlite3.connect('../Resources/db/messages.db')
+        # conn = sqlite3.connect('Resources\db\expo_messages.db')
+        c = conn.cursor()
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS EXPO_MESSAGES(
+        id integer primary key,
+        expo_timestamp text,
+        msg_from text,
+        content text);
+        """)
+
+        statement = "INSERT OR REPLACE INTO 'EXPO_MESSAGES' VALUES (?, ?, ?, ?);"
+        tuple = (self.id, self.timestamp, self.msg_from, self.content)
         c.execute(statement, tuple)
         conn.commit()
         conn.close()

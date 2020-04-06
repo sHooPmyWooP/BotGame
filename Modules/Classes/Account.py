@@ -68,6 +68,7 @@ class Account:
         self.research = {}
         self.ogame_api = None
         self.spy_messages = {}
+        self.expo_messages = {}
         self.planet_ids = []
         self.moon_ids = []
         self.expo_count = [0, 0]  # current/max
@@ -265,6 +266,38 @@ class Account:
             if msg["data-msg-id"] not in self.spy_messages:
                 self.spy_messages[msg["data-msg-id"]] = SpyMessage(self, msg)
 
+    def get_expo_messages(self, tab=22):
+        """
+        read messages from spy-inbox.
+        :param tab: int (Representing the OGame internal ID for different Inboxes.
+        -> 20: Spy, 21: Fight, 22: Expedition, 23: Transport, 24: Other...
+        :return: None
+        """
+        response = self.session.get(
+            f"https://s{self.server_number}-{self.server_language}.ogame.gameforge.com/game/index.php?page=messages&tab={tab}&ajax=1").text
+        soup = BeautifulSoup(response, features="html.parser")
+        page_count = int(soup.find("li", {"class": "curPage"}).text.split("/")[1])
+        for i in range(page_count):
+            i += 1
+            for msg in soup.findAll("li", {"class": 'msg'}):
+                if msg["data-msg-id"] not in self.expo_messages:
+                    self.expo_messages[msg["data-msg-id"]] = ExpoMessage(self, msg)
+            self.next_page_message(i, 22)
+
+    def next_page_message(self, page, tabID):
+        """get next page from inbox"""
+        form_data = {
+            "messageId": -1,
+            "tabid": tabID,
+            "action": 107,
+            "pagination": page,
+            "ajax": 1
+        }
+        response = self.session.post(
+            f'https://s{self.server_number}-{self.server_language}.ogame.gameforge.com/game/index.php?page=messages',
+            data=form_data)
+        print("asd")
+
     def chk_get_attacked(self):
         response = self.session.post('https://s{}-{}.ogame.gameforge.com/game/index.php?'
                                      'page=componentOnly&component=eventList&action=fetchEventBox&ajax=1&asJson=1'
@@ -330,7 +363,17 @@ class Account:
 
 
 if __name__ == "__main__":
-    a1 = Account(universe="Octans", username="nico.doehrn@gmail.com", password="Ogame4Friends")
-    m1 = a1.read_in_celestial(33735077)
-    m1.send_fleet(15, Coordinate(1, 412, 16), [[m1.ships["Großer Transporter"], 1]], holdingtime=1)
+    a1 = Account(universe="Pasiphae", username="strabbit@web.de", password="OGame!4myself")
+    # m1 = a1.read_in_celestial(33629496)
+    # m1.send_fleet(15, Coordinate(5, 210, 16), [[m1.ships["Großer Transporter"], 163],
+    #                                            [m1.ships["Leichter Jäger"], 30],
+    #                                            [m1.ships["Schwerer Jäger"], 298],
+    #                                            [m1.ships["Kreuzer"], 67],
+    #                                            [m1.ships["Schlachtschiff"], 24],
+    #                                            [m1.ships["Recycler"], 17],
+    #                                            [m1.ships["Bomber"], 20],
+    #                                            [m1.ships["Zerstörer"], 1],
+    #                                            [m1.ships["Schlachtkreuzer"], 76],
+    #                                            [m1.ships["Reaper"], 3]], holdingtime=1)
+    a1.get_expo_messages()
     print("Done...")

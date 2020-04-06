@@ -31,13 +31,23 @@ def select_all(conn, table):
     for row in rows:
         print(row)
 
+def query_database(conn):
+    c = conn.cursor()
+    c.execute("""
+            CREATE TABLE IF NOT EXISTS EXPO_MESSAGES(
+            id integer primary key,
+            expo_timestamp text,
+            msg_from text,
+            content text);
+            """)
 
 def main():
-    database = r'..\Resources\db\SPY_MESSAGES.db'
+    database = r'..\Resources\db\messages.db'
     # create a database connection
     conn = create_connection(database)
-    with conn:
-        select_all(conn, "spy_messages")
+    query_database(conn)
+    # with conn:
+    #     #     select_all(conn, "spy_messages")
 
 
 if __name__ == '__main__':
