@@ -4,6 +4,7 @@
     "password": "pw",
     "config": {
       "min_over_threshold": true,
+      "max_wait_time": 1800,
       "system_variance": 0,
       "fly_from_moon": true,
       "ships": {

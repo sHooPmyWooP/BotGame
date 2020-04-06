@@ -1,7 +1,11 @@
 import datetime
 import json
 import sys
+from os import path
 from time import sleep
+
+sys.path.append(
+    path.dirname(path.dirname(path.abspath(__file__))))  # necessary to make the file structure work on raspi
 
 from Modules.Classes.Account import Account
 from Modules.Classes.TelegramBot import TelegramBot
@@ -18,7 +22,7 @@ class Safety():
         self.acc = Account(uni, self.config["username"], self.config["password"])
         self.waiting_time = self.config["config"]["waiting_time"]
         try:
-            botConfig = open('Config/Telegram_Config.json', encoding="utf-8")  # check
+            bot_config = open('Config/Telegram_Config.json', encoding="utf-8")  # check
             self.telegramBot = TelegramBot()
         except:
             self.telegramBot = None
@@ -32,12 +36,14 @@ class Safety():
                     self.acc.read_in_all_celestial_basics()
                     self.acc.read_missions()
                     target_coords = []
+                    # GETTING THE MISSION
                     for mission in self.acc.missions:
                         if mission.hostile:
                             if mission.mission_type == mission_type_ids.attack:
                                 if mission.id not in self.handeld_attacks.keys():
                                     self.handeld_attacks[mission.id] = mission
                                     target_coords.append(mission.coord_to)
+                                    # GETTING THE TARGET
                                     for coord in target_coords:
                                         for celestial in self.acc.planets + self.acc.moons:
                                             if str(celestial.coordinates) == str(coord):

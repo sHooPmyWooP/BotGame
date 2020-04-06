@@ -116,6 +116,10 @@ class ExpoMessage(Message):
     def __init__(self, acc, msg):
         super().__init__(acc, msg)
         self.content = msg.find("span", {"class": "msg_content"}).text.strip()
+
+        if re.search("erbeutet", self.content).group(0):
+            self.type = "resources"
+
         self.push_expo_message_to_db()
         self.delete_message()
 
@@ -128,7 +132,8 @@ class ExpoMessage(Message):
         id integer primary key,
         expo_timestamp text,
         msg_from text,
-        content text);
+        content text
+        result text);
         """)
 
         statement = "INSERT OR REPLACE INTO 'EXPO_MESSAGES' VALUES (?, ?, ?, ?);"

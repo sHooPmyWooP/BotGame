@@ -277,12 +277,22 @@ class Account:
             f"https://s{self.server_number}-{self.server_language}.ogame.gameforge.com/game/index.php?page=messages&tab={tab}&ajax=1").text
         soup = BeautifulSoup(response, features="html.parser")
         page_count = int(soup.find("li", {"class": "curPage"}).text.split("/")[1])
-        for i in range(page_count):
-            i += 1
+        for page in range(page_count):
+            page += 1
+            form_data = {
+                "messageId": -1,
+                "tabid": tab,
+                "action": 107,
+                "pagination": page,
+                "ajax": 1
+            }
+            response = self.session.post(
+                f'https://s{self.server_number}-{self.server_language}.ogame.gameforge.com/game/index.php?page=messages',
+                data=form_data).text
+            soup = BeautifulSoup(response, features="html.parser")
             for msg in soup.findAll("li", {"class": 'msg'}):
                 if msg["data-msg-id"] not in self.expo_messages:
                     self.expo_messages[msg["data-msg-id"]] = ExpoMessage(self, msg)
-            self.next_page_message(i, 22)
 
     def next_page_message(self, page, tabID):
         """get next page from inbox"""
