@@ -87,7 +87,6 @@ class SpyMessage(Message):
         self.api_key = api_key
 
         self.push_spy_message_to_db()
-        self.delete_message()
 
     def push_spy_message_to_db(self):
         conn = sqlite3.connect('Resources/db/messages.db')
@@ -121,7 +120,6 @@ class ExpoMessage(Message):
             self.type = "resources"
 
         self.push_expo_message_to_db()
-        self.delete_message()
 
     def push_expo_message_to_db(self):
         conn = sqlite3.connect('../Resources/db/messages.db')

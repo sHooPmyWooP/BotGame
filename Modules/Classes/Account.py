@@ -258,7 +258,6 @@ class Account:
         -> 20: Spy, 21: Fight, 22: Expedition, 23: Transport, 24: Other...
         :return: None
         """
-
         response = self.session.get(
             f"https://s{self.server_number}-{self.server_language}.ogame.gameforge.com/game/index.php?page=messages&tab={tab}&ajax=1").text
         soup = BeautifulSoup(response, features="html.parser")
@@ -293,20 +292,6 @@ class Account:
             for msg in soup.findAll("li", {"class": 'msg'}):
                 if msg["data-msg-id"] not in self.expo_messages:
                     self.expo_messages[msg["data-msg-id"]] = ExpoMessage(self, msg)
-
-    def next_page_message(self, page, tabID):
-        """get next page from inbox"""
-        form_data = {
-            "messageId": -1,
-            "tabid": tabID,
-            "action": 107,
-            "pagination": page,
-            "ajax": 1
-        }
-        response = self.session.post(
-            f'https://s{self.server_number}-{self.server_language}.ogame.gameforge.com/game/index.php?page=messages',
-            data=form_data)
-        print("asd")
 
     def chk_get_attacked(self):
         response = self.session.post('https://s{}-{}.ogame.gameforge.com/game/index.php?'
