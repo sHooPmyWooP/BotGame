@@ -1,14 +1,14 @@
 {
   "Pasiphae": {
-    "username": "username",
-    "password": "password",
+    "username": "strabbit@web.de",
+    "password": "OGame!4myself",
     "config": {
-      "waiting_time": 600
+      "waiting_time": 1500
     }
   },
   "Octans": {
-    "username": "username",
-    "password": "password",
+    "username": "strabbit@web.de",
+    "password": "OGame!4myself",
     "config": {
       "waiting_time": 300
     }

@@ -38,6 +38,7 @@ class Safety():
                     target_coords = []
                     # GETTING THE MISSION
                     for mission in self.acc.missions:
+                        target_coords = []
                         if mission.hostile:
                             if mission.mission_type == mission_type_ids.attack:
                                 if mission.id not in self.handeld_attacks.keys():
@@ -49,10 +50,11 @@ class Safety():
                                             if str(celestial.coordinates) == str(coord):
                                                 self.handeld_attacks[mission.id].attack_target = celestial
                                                 message = str(
-                                                    celestial.coordinates) + " is beeing attacked at " + mission.get_arrival_as_string()
+                                                    celestial.coordinates) + " " + celestial.name + " is beeing attacked at " + mission.get_arrival_as_string()
                                                 print(message)
                                                 if self.telegramBot:
                                                     self.telegramBot.send_message(message)
+                                                break
                     # for celestial in targeted_celestials:
                     #     celestial.reader.read_defenses()
                     #     celestial.build_defense_by_ratio()
@@ -62,7 +64,10 @@ class Safety():
                     sleep(self.waiting_time)
                 else:
                     sleep_until = datetime.datetime.now() + datetime.timedelta(0, self.waiting_time)
-                    print("No Attacks, sleep until:", sleep_until)
+                    message = "No Attacks, sleep until: " + str(sleep_until)
+                    print(message)
+                    if self.telegramBot:
+                        self.telegramBot.send_message(message)
                     sleep(self.waiting_time)
             except Exception as e:
                 message = f"Exception! Sleeping {self.waiting_time} Seconds before retry.\n Exception:" + str(e)

@@ -1,9 +1,10 @@
 {
   "Pasiphae": {
-    "username": "user",
-    "password": "pw",
+    "username": "strabbit@web.de",
+    "password": "OGame!4myself",
     "config": {
       "min_over_threshold": true,
+      "time_between_expos": 300,
       "max_wait_time": 1800,
       "system_variance": 0,
       "fly_from_moon": true,
@@ -17,7 +18,7 @@
         },
         "Großer Transporter": {
           "min": 0,
-          "max": 999999999999,
+          "max": 250,
           "threshold": 0,
           "expo_factor": 1,
           "point_weight": 12

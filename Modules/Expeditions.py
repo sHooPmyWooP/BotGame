@@ -35,6 +35,7 @@ class Expedition:
         self.possible_fleets = 0
         self.fleet_started = False
         self.max_wait_time = self.config["config"]["max_wait_time"]
+        self.time_between_expos = self.config["config"]["time_between_expos"]
 
     def thread_expos(self):
         while True:
@@ -90,8 +91,7 @@ class Expedition:
                                      if mission.mission_type == mission_type_ids.expedition
                                      and mission.return_flight]
             for mission in relevant_missions:
-                return_times.append(mission.get_arrival_as_datetime() + datetime.timedelta(0,
-                                                                                           15))  # wait 15 seconds after return of fleet to account for delay
+                return_times.append(mission.get_arrival_as_datetime() + datetime.timedelta(0, self.time_between_expos))
             earliest_start = min(dt for dt in return_times)
             earliest_start = min(earliest_start, datetime.datetime.now() + datetime.timedelta(0, self.max_wait_time))
             print("Pause until", earliest_start)
