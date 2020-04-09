@@ -23,3 +23,30 @@ class messages:
     expedition = 22
     transport = 23
     other = 24
+
+
+class expo_messages:
+    """
+    Keywords to classify Expo Messages
+    """
+    keywords = {
+        "pirats": ["piraten", "weltraumpiraten", "primitive barbaren"],
+        "aliens": ["fremdartige rasse", "alienrasse", "unbekannten spezies", "fremdartig anmutenden schiffe",
+                   "unbekannter schiffe", "fremdartig anmutende schiffe"],
+        "resources": ["erbeutet"],
+        "nothing": ["roten riesen", "bestes-bild-des-universums", "kurioser", "das führungsschiff", "leere des alls",
+                    "gravitationsfeld",
+                    "reaktorfehler", "computervirus", "hypnotischen muster", "leeren Händen", "Dschungelfieber",
+                    "bugs zu kämpfen", "rote Anomalien", "wunderschöne bilder"],
+        "delayed_return": ["verzögerte", "verspätung", "patzer des navigators"],
+        "faster_return": ["rückkopplung in den energiespulen", "deine expedition kehrt nun etwas früher"],
+        "ships": ["schlossen sich der flotte an"],
+        "item": ["unbemannten flieger", "wertvolles Artefakt", "gegenstand hinterlassen"],
+        "dark_matter": ["dunkle materie"]
+    }
+
+
+class resources:
+    metall = "Metall"
+    kristall = "Kristall"
+    deuterium = "Deuterium"

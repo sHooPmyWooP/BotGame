@@ -66,8 +66,8 @@ class Safety():
                     sleep_until = datetime.datetime.now() + datetime.timedelta(0, self.waiting_time)
                     message = "No Attacks, sleep until: " + str(sleep_until)
                     print(message)
-                    if self.telegramBot:
-                        self.telegramBot.send_message(message)
+                    # if self.telegramBot:
+                    #     self.telegramBot.send_message(message)
                     sleep(self.waiting_time)
             except Exception as e:
                 message = f"Exception! Sleeping {self.waiting_time} Seconds before retry.\n Exception:" + str(e)

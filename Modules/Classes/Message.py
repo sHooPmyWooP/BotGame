@@ -1,6 +1,11 @@
 import re
 import sqlite3
 
+try:
+    from Modules.Resources.Static_Information.Constants import expo_messages, resources
+except ModuleNotFoundError:
+    from Resources.Static_Information.Constants import expo_messages, resources
+
 from .Coordinate import Coordinate
 from .Resources import Resources
 
@@ -9,6 +14,7 @@ class Message:
     """
     represents one message from Inbox
     """
+
     def __init__(self, acc, msg):
         self.acc = acc
         self.id = msg["data-msg-id"]
@@ -25,6 +31,13 @@ class Message:
         delete = self.acc.session.post(
             f'https://s{self.acc.server_number}-{self.acc.server_language}.ogame.gameforge.com/game/index.php?page=messages',
             data=form_data)
+
+    @staticmethod
+    def chk_regex_case_insensitive(content, search_string):
+        if re.search(search_string, content, re.IGNORECASE):
+            return True
+        else:
+            return False
 
 
 class SpyMessage(Message):
@@ -116,26 +129,73 @@ class ExpoMessage(Message):
         super().__init__(acc, msg)
         self.content = msg.find("span", {"class": "msg_content"}).text.strip()
 
-        if re.search("erbeutet", self.content).group(0):
-            self.type = "resources"
-
+        self.result_type = self.classify_result()
         self.push_expo_message_to_db()
 
     def push_expo_message_to_db(self):
         conn = sqlite3.connect('../Resources/db/messages.db')
-        # conn = sqlite3.connect('Resources\db\expo_messages.db')
         c = conn.cursor()
-        c.execute("""
-        CREATE TABLE IF NOT EXISTS EXPO_MESSAGES(
-        id integer primary key,
-        expo_timestamp text,
-        msg_from text,
-        content text
-        result text);
-        """)
 
-        statement = "INSERT OR REPLACE INTO 'EXPO_MESSAGES' VALUES (?, ?, ?, ?);"
-        tuple = (self.id, self.timestamp, self.msg_from, self.content)
+        self.push_table_expo_message(conn, c)
+
+        if self.result_type:
+            self.get_result_details_amount(conn, c)
+
+        conn.close()
+
+    def classify_result(self):
+        for key in expo_messages.keywords.keys():
+            for keyword in expo_messages.keywords[key]:
+                if self.chk_regex_case_insensitive(self.content, keyword):
+                    return key
+        return "unclassified"
+
+    def get_result_details_amount(self, conn, c):
+        for result in ["nothing", "delay", "pirats", "aliens", "delayed_return", "faster_return"]:
+            if self.result_type == result:
+                self.push_table_expo_message_details(conn, c, result, 1)
+        if self.result_type == "resources":
+            for res in [resources.metall, resources.kristall, resources.deuterium]:
+                pattern = re.compile(res + ' (\d*\.)*\d+')
+                if pattern.search(self.content):
+                    self.push_table_expo_message_details(conn, c, res, re.search('(\d*\.)*\d+', self.content)
+                                                         .group(0).replace(".", ""))
+                    return
+        if self.result_type == "ships":
+            ships = re.split(': \d+', self.content.split("sich der Flotte an:")[1])[:-1]
+            amount = [i for i in re.findall('(\d+\.?)+\d?', self.content)]
+            for i, ship in enumerate(ships):
+                self.push_table_expo_message_details(conn, c, ship, amount[i])
+
+    def push_table_expo_message(self, conn, c):
+        c.execute("""
+                CREATE TABLE IF NOT EXISTS EXPO_MESSAGES(
+                id integer primary key,
+                expo_timestamp text,
+                msg_from text,
+                content text,
+                result_type text);
+                """)
+
+        statement = "INSERT OR REPLACE INTO 'EXPO_MESSAGES' VALUES (?, ?, ?, ?, ?);"
+        tuple = (self.id, self.timestamp, self.msg_from, self.content, self.result_type)
         c.execute(statement, tuple)
         conn.commit()
-        conn.close()
+
+    def push_table_expo_message_details(self, conn, c, details, amount):
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS EXPO_MESSAGES_DETAILS(
+                    id integer not null,
+                    expo_timestamp text,
+                    content text,
+                    result_type text,
+                    result_details text not null,
+                    result_amount int,
+                    PRIMARY KEY (id, result_details)
+                    );
+        """)
+        statement = "INSERT OR REPLACE INTO 'EXPO_MESSAGES_DETAILS' VALUES (?, ?, ?, ?, ?, ?);"
+        tuple = (
+            self.id, self.timestamp, self.content, self.result_type, details, amount)
+        c.execute(statement, tuple)
+        conn.commit()
