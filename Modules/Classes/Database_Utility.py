@@ -31,6 +31,7 @@ def select_all(conn, table):
     for row in rows:
         print(row)
 
+
 def query_database(conn):
     c = conn.cursor()
     c.execute("""
@@ -40,6 +41,7 @@ def query_database(conn):
             msg_from text,
             content text);
             """)
+
 
 def main():
     database = r'..\Resources\db\messages.db'

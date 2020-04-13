@@ -360,6 +360,8 @@ class Account:
 if __name__ == "__main__":
     a1 = Account(universe="Pasiphae", username="strabbit@web.de", password="OGame!4myself")
     a1.get_expo_messages()
+    """
     for message in a1.expo_messages:
         a1.expo_messages[message].delete_message()
+    """
     print("Done...")
