@@ -610,7 +610,7 @@ class AccountFunctions:
             d = json.load(f)
         return d[uni]
 
-    def get_expo_trash(self):
+    def chk_for_expo_trash(self):
         self.acc.read_in_all_celestial_basics()
         systems = []
         for planet in self.acc.planets:
@@ -619,11 +619,36 @@ class AccountFunctions:
                                                coord.split(":")[1], 16, 3) for coord in set(systems)]
         print("Done..")
 
+    def get_debris_for_galaxy_system(self, galaxy, system):
+        form_data = {'galaxy': galaxy,
+                     'system': system}
+        response = self.acc.session.post(
+            f'https://s{self.acc.server_number}-{self.acc.server_language}.ogame.gameforge.com/game/index.php?page=ingame&component=galaxyContent&ajax=1',
+            headers={'X-Requested-With': 'XMLHttpRequest'}, data=form_data).json()
+        soup = BeautifulSoup(response["galaxy"], features="html.parser")
+        debris_raw = [debris.text.strip() for debris in soup.find_all("td", {"class": "debris"}) if
+                      debris.text.strip() != '']
+        debris_list = []
+        if debris_raw:
+            for debris in debris_raw:
+                # Coordinates
+                coord_raw = re.search("\[\d+:\d+:\d\]", debris).group(0)
+                coord_cleaned = coord_raw.replace("[", "").replace("]", "").split(":")
+                coord = Coordinate(coord_cleaned[0], coord_cleaned[1], coord_cleaned[2], 3)
+                # Resources
+                debris_metal = re.search("\d+", debris.replace(".", "").split("Metall")[1]).group(0)
+                debris_crystal = re.search("\d+", debris.replace(".", "").split("Kristall")[1]).group(0)
+                resources = Resources(debris_metal, debris_crystal, 0)
+
+                debris_list.append([coord, resources])
+
+        print("Done...")
+
 
 if __name__ == "__main__":
     a1 = Account(universe="Pasiphae", username="strabbit@web.de", password="OGame!4myself")
-
-    a1.AccountFunctions.get_expo_trash()
+    a1.AccountFunctions.get_debris_for_galaxy_system(1, 139)
+    # a1.AccountFunctions.get_expo_trash()
     #
     # a1.get_expo_messages()
     # """
