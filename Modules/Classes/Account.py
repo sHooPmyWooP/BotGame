@@ -19,6 +19,12 @@ except ModuleNotFoundError:
     from Modules.Classes.Coordinate import Coordinate
 except ImportError:
     from Modules.Classes.Coordinate import Coordinate
+try:  # Resources
+    from .Resources import Resources
+except ModuleNotFoundError:
+    from Modules.Classes.Resources import Resources
+except ImportError:
+    from Modules.Classes.Resources import Resources
 try:  # SpyMessage
     from .Message import SpyMessage, ExpoMessage
 except ModuleNotFoundError:
@@ -57,9 +63,9 @@ except ImportError:
     from Modules.Classes.CustomExceptions import NoShipsAvailableError
 
 try:
-    from Modules.Resources.Static_Information.Constants import mission_type_ids
+    from Modules.Resources.Static_Information.Constants import mission_type_ids, static_lists
 except ModuleNotFoundError:
-    from Resources.Static_Information.Constants import mission_type_ids
+    from Resources.Static_Information.Constants import mission_type_ids, ship_list
 
 
 class Account:
@@ -69,6 +75,7 @@ class Account:
         self.universe = universe
         self.username = username
         self.password = password
+        self.AccountFunctions = AccountFunctions(self)
         self.chat_token = None
         self.sendfleet_token = None
         self.build_token = None
@@ -394,8 +401,32 @@ class Account:
                     "]", "").split(":")
                 coords_to = Coordinate(coords_to_list[0], coords_to_list[1], coords_to_list[2], 2 if to_moon else 1)
                 hostile = True if event.find("td", {"class": "countDown"}).find("span", {"class": "hostile"}) else False
+
+                details = BeautifulSoup(event.find("span", {"class": "tooltipRight"}).attrs["title"],
+                                        features="html.parser")
+                details_rows = details.find_all("td")
+                ships = []
+                resources = Resources()
+
+                details_rows_clean = [row for row in details_rows if row.text != ' ']
+
+                for i in range(0, int(len(details_rows_clean)), 2):
+                    text = details_rows_clean[i].text.replace(":", "")
+                    value = details_rows_clean[i + 1].text.replace(".", "")
+                    if text in static_lists.ships:
+                        ships.append([text, int(value)])
+                    elif text in static_lists.resources:
+                        if text == "Metall":
+                            text = "metal"
+                        elif text == "Kristall":
+                            text = "crystal"
+                        else:
+                            text = "deuterium"
+                        resources.set_value(int(value), text)
+
                 self.missions.append(
-                    Mission(id, mission_type, return_flight, hostile, coords_from, coords_to, arrival_time))
+                    Mission(id, mission_type, return_flight, hostile, coords_from, coords_to, arrival_time, resources,
+                            ships))
 
     def chk_logged_in(self):
         """
@@ -414,7 +445,7 @@ class AccountFunctions:
 
     def __init__(self, acc):
         self.acc = acc
-        self.config = self.get_expeditions_config(self.acc.universe)
+        self.config = self.get_expeditions_config(acc.universe)
         self.possible_fleets, self.possible_expos, self.max_wait_time, self.time_between_expos, self.max_expo_slots = 0, 0, 0, 0, 0
         self.fleet_started, self.expo_user_defined_planet = False, False
         self.expo_user_defined_planet_coordinates = ""
@@ -579,16 +610,24 @@ class AccountFunctions:
             d = json.load(f)
         return d[uni]
 
+    def get_expo_trash(self):
+        self.acc.read_in_all_celestial_basics()
+        systems = []
+        for planet in self.acc.planets:
+            systems.append(str(planet.coordinates.galaxy) + ":" + str(planet.coordinates.system))
+        expo_trash_coords_unique = [Coordinate(coord.split(":")[0],
+                                               coord.split(":")[1], 16, 3) for coord in set(systems)]
+        print("Done..")
+
 
 if __name__ == "__main__":
     a1 = Account(universe="Pasiphae", username="strabbit@web.de", password="OGame!4myself")
-    functions = AccountFunctions(a1)
-    functions.start_expeditions_loop()
 
+    a1.AccountFunctions.get_expo_trash()
     #
     # a1.get_expo_messages()
     # """
     # for message in a1.expo_messages:
     #     a1.expo_messages[message].delete_message()
     # """
-    # print("Done...")
+    print("Done...")

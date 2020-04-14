@@ -1,8 +1,14 @@
 import datetime
-
+try:  # Resources
+    from .Resources import Resources
+except ModuleNotFoundError:
+    from Modules.Classes.Resources import Resources
+except ImportError:
+    from Modules.Classes.Resources import Resources
 
 class Mission:
-    def __init__(self, id, mission_type, return_flight, hostile, coord_from, coord_to, arrival_time):
+    def __init__(self, id, mission_type, return_flight, hostile, coord_from, coord_to, arrival_time,
+                 resources=Resources(), ships=[]):
         self.id = id
         self.mission_type = mission_type
         self.return_flight = return_flight
@@ -10,6 +16,8 @@ class Mission:
         self.hostile = hostile
         self.coord_from = coord_from
         self.coord_to = coord_to
+        self.resources = resources
+        self.ships = ships
 
     def __repr__(self):
         return "ID: " + str(self.id) + " Type: " + str(self.mission_type) + " from: " + str(

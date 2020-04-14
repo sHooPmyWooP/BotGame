@@ -53,3 +53,20 @@ class resources:
     metall = "Metall"
     kristall = "Kristall"
     deuterium = "Deuterium"
+
+
+class static_lists:
+    ships = ["Spionagesonde",
+             "Kleiner Transporter",
+             "Großer Transporter",
+             "Recycler",
+             "Kolonieschiff",
+             "Leichter Jäger",
+             "Schwerer Jäger",
+             "Kreuzer", "Schlachtschiff",
+             "Schlachtkreuzer",
+             "Bomber",
+             "Zerstörer",
+             "Todesstern"]
+
+    resources = ["Metall", "Kristall", "Deuterium"]
