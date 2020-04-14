@@ -236,9 +236,14 @@ class CelestialReader:
             self.celestial.name = str(self.celestial.coordinates) + " - Moon"
 
             # Fields
-            self.celestial.fields = re.search("\(\d+/\d+\)", result["title"]).group(0).replace("(", "").replace(")",
-                                                                                                                "").split(
-                "/")
+            #  overmark class gets added if all fields are used e.g. (16/16)
+            self.celestial.fields = re.search("(\((<span class='overmark' >)?]?\d+(<\/span>)?\/\d+\))",
+                                              result["title"]).group(0) \
+                .replace("(", "") \
+                .replace(")", "") \
+                .replace("<span class='overmark' >", "") \
+                .replace("</span>", "") \
+                .split("/")
 
     def read_resources_and_energy(self):
         response = self.celestial.acc.session.get(

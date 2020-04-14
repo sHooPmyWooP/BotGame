@@ -1,7 +1,12 @@
+import datetime
+import json
+import random
 import re
 import sys
+import traceback
 from os import path
 
+import pause
 import requests
 from bs4 import BeautifulSoup
 
@@ -44,6 +49,17 @@ except ModuleNotFoundError:
     from Modules.Classes.Research import Research
 except ImportError:
     from Modules.Classes.Research import Research
+try:  # CustomExceptions
+    from .CustomExceptions import NoShipsAvailableError
+except ModuleNotFoundError:
+    from Modules.Classes.CustomExceptions import NoShipsAvailableError
+except ImportError:
+    from Modules.Classes.CustomExceptions import NoShipsAvailableError
+
+try:
+    from Modules.Resources.Static_Information.Constants import mission_type_ids
+except ModuleNotFoundError:
+    from Resources.Static_Information.Constants import mission_type_ids
 
 
 class Account:
@@ -145,6 +161,13 @@ class Account:
                                                                  in_construction=in_construction)
 
     def read_in_mission_count(self):
+        """
+        sets current and maximum values for fleets, expos and offers in the format
+        self.fleet_count[min,max]
+        self.expo_count[min,max]
+        self.offers_count[min,max]
+        :return: None
+        """
         response = self.session.get(
             f'https://s{self.server_number}-{self.server_language}.ogame.gameforge.com/game/index.php?page=ingame&component=fleetdispatch').text  # &cp={self.planets[0].id entfernt
         soup = BeautifulSoup(response, features="html.parser")
@@ -216,6 +239,9 @@ class Account:
         return moon_ids
 
     def init_celestials(self):
+        """
+        Initiates the celestials with base information like id, coords and such
+        """
         for id in self.get_planet_ids() + self.get_moon_ids():
             for celestial in self.planets + self.moons:
                 if celestial.id == id:
@@ -224,6 +250,11 @@ class Account:
                 celestial = Celestial(self, id)
                 celestial.reader.read_base_infos()
                 self.planets.append(celestial) if not celestial.is_moon else self.moons.append(celestial)
+
+    def get_celestial_by_coord(self, coord):
+        for celestial in self.moons + self.planets:
+            if celestial.coordinates.get_coord_str() == coord.get_coord_str():
+                return celestial
 
     def read_in_all_celestial_basics(self):
         ids = self.get_planet_ids() + self.get_moon_ids()
@@ -237,6 +268,12 @@ class Account:
             planet.reader.read_fleet()
         for moon in self.moons:
             moon.reader.read_fleet()
+
+    def read_in_fleet_by_id(self, celestial_id):
+        for celestial in self.planets + self.moons:
+            if celestial.id == celestial_id:
+                celestial.reader.read_fleet()
+                break
 
     def get_init_chat_token(self):
         marker_string = 'var ajaxChatToken = '
@@ -294,6 +331,9 @@ class Account:
                     self.expo_messages[msg["data-msg-id"]] = ExpoMessage(self, msg)
 
     def chk_get_attacked(self):
+        """
+        :return: True if hostile action detected (includes spy etc.)
+        """
         response = self.session.post('https://s{}-{}.ogame.gameforge.com/game/index.php?'
                                      'page=componentOnly&component=eventList&action=fetchEventBox&ajax=1&asJson=1'
                                      .format(self.server_number, self.server_language),
@@ -304,6 +344,9 @@ class Account:
             return False
 
     def chk_get_neutral(self):
+        """
+        :return: True if neutral action detected
+        """
         response = self.session.get('https://s{}-{}.ogame.gameforge.com/game/index.php?'
                                     'page=componentOnly&component=eventList&action=fetchEventBox&ajax=1&asJson=1'
                                     .format(self.server_number, self.server_language),
@@ -314,10 +357,18 @@ class Account:
             return False
 
     def logout(self):
+        """
+        Ends the session
+        :return:
+        """
         self.session.get('https://s{}-{}.ogame.gameforge.com/game/index.php?page=logout'
                          .format(self.server_number, self.server_language))
 
     def read_missions(self):
+        """
+        sets the self.missions[] array in the format of self.missions[Mission,Mission]
+        :return: None
+        """
         response = self.session.get('https://s{}-{}.ogame.gameforge.com/game/index.php?page=ingame&'
                                     'component=movement'
                                     .format(self.server_number, self.server_language)).text
@@ -347,7 +398,9 @@ class Account:
                     Mission(id, mission_type, return_flight, hostile, coords_from, coords_to, arrival_time))
 
     def chk_logged_in(self):
-        # form_data = {'action': 'showPlayerList'}
+        """
+        :return: Bool
+        """
         response = self.session.get(
             'https://s{}-{}.ogame.gameforge.com/game/index.php?page=chat'.format(self.server_number,
                                                                                  self.server_language))
@@ -357,11 +410,185 @@ class Account:
             return True
 
 
+class AccountFunctions:
+
+    def __init__(self, acc):
+        self.acc = acc
+        self.config = self.get_expeditions_config(self.acc.universe)
+        self.possible_fleets, self.possible_expos, self.max_wait_time, self.time_between_expos, self.max_expo_slots = 0, 0, 0, 0, 0
+        self.fleet_started, self.expo_user_defined_planet = False, False
+        self.expo_user_defined_planet_coordinates = ""
+
+    def set_expo_config(self):
+        self.max_wait_time = self.config["config"]["max_wait_time"]
+        self.time_between_expos = self.config["config"]["time_between_expos"]
+        # max expo slots caps at maximum possible expeditions
+        self.max_expo_slots = self.config["config"]["max_expo_slots"] if \
+            self.config["config"]["max_expo_slots"] <= self.acc.expo_count[1] else self.acc.expo_count[1]
+        self.expo_user_defined_planet = self.config["config"]["planet"]["user_defined_planet"]
+        self.expo_user_defined_planet_coordinates = self.config["config"]["planet"]["user_defined_planet_coordinates"]
+
+    def start_expeditions_loop(self):
+        self.set_expo_config()
+        while True:
+            try:
+                if not self.acc.chk_logged_in:
+                    self.acc.login()
+                self.chk_fleet_slots()
+                self.acc.init_celestials()
+                while self.possible_expos > 0 and self.possible_fleets > 0:
+                    celestial = self.get_celestial_to_start_from()
+                    self.fleet_started = False
+                    while not self.fleet_started:
+                        self.send_expedition(celestial)
+            # except ConnectionError as e:
+            #     print("Connection failed...", e)
+            #     sleep(60)
+            # except AttributeError as e:
+            #     print("Unhandled Error occurred", e)
+            #     sleep(60)
+            # except AssertionError:
+            #     traceback.print_exc()
+            #     pass
+            except Exception as e:
+                traceback.print_exc()
+                pass
+
+    def chk_fleet_slots(self):
+        """
+        checks if a fleet slot for an expedition is available, if not pauses until next returning fleet or expo,
+        depending on missing slot type
+        :return: Bool
+        """
+        self.acc.read_in_mission_count()
+        self.acc.read_missions()
+        self.possible_expos = (self.acc.expo_count[1] - self.acc.expo_count[0])
+        self.possible_fleets = (self.acc.fleet_count[1] - self.acc.fleet_count[0])
+        if self.acc.expo_count[1] < 1:
+            print("No Astro research available yet!")
+            quit()
+
+        if self.possible_expos < 1 or self.possible_fleets < 1:
+            return_times = []
+            if self.possible_fleets < 1:
+                relevant_missions = [mission for mission in self.acc.missions
+                                     if mission.return_flight]
+            else:
+                relevant_missions = [mission for mission in self.acc.missions
+                                     if mission.mission_type == mission_type_ids.expedition
+                                     and mission.return_flight]
+            for mission in relevant_missions:
+                return_times.append(
+                    mission.get_arrival_as_datetime() + datetime.timedelta(0, self.time_between_expos))
+            earliest_start = min(dt for dt in return_times)
+            earliest_start = min(earliest_start,
+                                 datetime.datetime.now() + datetime.timedelta(0, self.max_wait_time))
+            print("Pause until", earliest_start)
+            pause.until(earliest_start)
+            return False
+        print("Fleet Slots:", self.possible_fleets, "Expo Slots:", self.possible_expos)
+        return True
+
+    def get_celestial_to_start_from(self):
+        if self.expo_user_defined_planet:
+            coord = self.expo_user_defined_planet_coordinates.replace("-", ":").split(":")
+            if len(coord) != 4:
+                print("Please adjust Coordinate settings for user_defined_planet_coordinates in Config!")
+                quit()
+            coord_obj = Coordinate(coord[0], coord[1], coord[2], coord[3])
+            celestial = self.acc.get_celestial_by_coord(coord_obj)
+            celestials = [celestial]
+            self.acc.read_in_fleet_by_id(celestial.id)
+        else:
+            # If not user_defined_planet get celestial with max struct points (determined by settings)
+            self.acc.read_in_all_fleets()
+            celestials = []
+            if self.config["config"]["planet"]["fly_from_moon"]:
+                celestials += self.acc.moons
+            if self.config["config"]["planet"]["fly_from_planet"]:
+                celestials += self.acc.planets
+
+            celestial_points = []
+            for i in range(len(celestials)):
+                celestial = celestials[i]
+                ships = []
+                for ship, attr in self.config["config"]["ships"].items():
+                    ships.append([celestial.ships[ship], attr])
+                celestial_points.append([celestial, sum(ship[1]["point_weight"] * ship[0].count for ship in ships)])
+
+            celestial_points_sorted = sorted(celestial_points, key=lambda x: (x[1], x[1]), reverse=True)
+            celestial = celestial_points_sorted[[0][0]]
+
+        if self.config["config"]["print_ships_on_planet"]:
+            for celestial in celestials:
+                print("--------", celestial.name, "--------")
+                for ship in celestial.ships:
+                    if celestial.ships[ship].count:
+                        print("{:.<22}".format(celestial.ships[ship].name) + " -> amount: " + '{: >10}'.format(
+                            celestial.ships[ship].count))
+        return celestial
+
+    def send_expedition(self, celestial):
+        min_over_threshold = self.config["config"]["min_over_threshold"]
+        ships = []
+        ships_send = []
+        for ship, attr in self.config["config"]["ships"].items():
+            ships.append([celestial.ships[ship], attr])
+
+        for ship in ships:
+            expo_factor = ship[1]["expo_factor"]
+            count_available = ship[0].count
+            count_max = ship[1]["max"]
+            count_min = ship[1]["min"]
+            threshold = min(ship[1]["threshold"], count_available)
+
+            count_calc = int((count_available - threshold) / (expo_factor * self.possible_expos))
+
+            if count_calc >= count_max:
+                count_send = count_max
+            elif count_calc <= count_min:
+                count_send = min(count_min, count_available)
+            else:
+                count_send = count_calc
+            if count_send > 0:
+                ships_send.append([ship[0], int(count_send)])
+
+        random_system = random.randint(celestial.coordinates.system - self.config["config"]["system_variance"],
+                                       celestial.coordinates.system + self.config["config"]["system_variance"])
+
+        if ships_send:
+            response = celestial.send_fleet(mission_type_ids.expedition,
+                                            Coordinate(celestial.coordinates.galaxy, random_system, 16), ships_send,
+                                            resources=[0, 0, 0], speed=10,
+                                            holdingtime=1)
+        else:  # No ships available for expo
+            raise NoShipsAvailableError(celestial)
+
+        if not response[0]:
+            raise AttributeError
+            # todo: implement custom Errorhandling
+
+        if response[0]:
+            self.possible_expos -= 1
+            self.possible_fleets -= 1
+            self.fleet_started = True
+
+    @staticmethod
+    def get_expeditions_config(uni):
+        with open(path.abspath("../Config/Expeditions_Config.json"), encoding="utf-8") as f:
+            d = json.load(f)
+        return d[uni]
+
+
 if __name__ == "__main__":
     a1 = Account(universe="Pasiphae", username="strabbit@web.de", password="OGame!4myself")
-    a1.get_expo_messages()
-    """
-    for message in a1.expo_messages:
-        a1.expo_messages[message].delete_message()
-    """
-    print("Done...")
+    functions = AccountFunctions(a1)
+    functions.start_expeditions_loop()
+
+    #
+    # a1.get_expo_messages()
+    # """
+    # for message in a1.expo_messages:
+    #     a1.expo_messages[message].delete_message()
+    # """
+    # print("Done...")
