@@ -39,7 +39,8 @@ def query_database(conn):
             id integer primary key,
             expo_timestamp text,
             msg_from text,
-            content text);
+            content text,
+            universe text);
             """)
 
 
