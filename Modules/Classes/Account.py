@@ -270,6 +270,7 @@ class Account:
                 self.spy_messages[msg["data-msg-id"]] = SpyMessage(self, msg)
 
     def get_expo_messages(self, tab=22):
+        print('read expo messages from account')
         """
         read messages from spy-inbox.
         :param tab: int (Representing the OGame internal ID for different Inboxes.
@@ -296,6 +297,8 @@ class Account:
             for msg in soup.findAll("li", {"class": 'msg'}):
                 if msg["data-msg-id"] not in self.expo_messages:
                     self.expo_messages[msg["data-msg-id"]] = ExpoMessage(self, msg)
+
+        print('All expo messages pushed into database')
 
     def chk_get_attacked(self):
         response = self.session.post('https://s{}-{}.ogame.gameforge.com/game/index.php?'
