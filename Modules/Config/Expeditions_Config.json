@@ -7,7 +7,14 @@
       "time_between_expos": 300,
       "max_wait_time": 1800,
       "system_variance": 0,
-      "fly_from_moon": true,
+      "max_expo_slots": 99,
+      "planet": {
+        "user_defined_planet": true,
+        "user_defined_planet_coordinates": "5:210:12-2",
+        "fly_from_moon": true,
+        "fly_from_planet": true
+      },
+      "print_ships_on_planet": true,
       "ships": {
         "Bomber": {
           "min": 0,
@@ -18,15 +25,15 @@
         },
         "Großer Transporter": {
           "min": 0,
-          "max": 250,
+          "max": 99999999999,
           "threshold": 0,
           "expo_factor": 1,
           "point_weight": 12
         },
         "Kleiner Transporter": {
           "min": 0,
-          "max": 999999999999,
-          "threshold": 0,
+          "max": 999999999,
+          "threshold": 1000,
           "expo_factor": 1,
           "point_weight": 4
         },
