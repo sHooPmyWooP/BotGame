@@ -30,6 +30,7 @@ class expo_messages:
     Keywords to classify Expo Messages
     """
     keywords = {
+        "dark_matter": ["dunkle materie"],
         "pirats": ["piraten", "weltraumpiraten", "primitive barbaren", "sternen-freibeuter"],
         "aliens": ["fremdartige rasse", "alienrasse", "unbekannten spezies", "fremdartig anmutenden schiffe",
                    "unbekannter schiffe", "fremdartig anmutende schiffe"],
@@ -44,8 +45,7 @@ class expo_messages:
         "faster_return": ["rückkopplung in den energiespulen", "deine expedition kehrt nun etwas früher"],
         "fleet_loss": ["flotte endgültig verloren"],
         "ships": ["schlossen sich der flotte an"],
-        "item": ["unbemannten flieger", "wertvolles Artefakt", "gegenstand hinterlassen"],
-        "dark_matter": ["dunkle materie"]
+        "item": ["unbemannten flieger", "wertvolles Artefakt", "gegenstand hinterlassen"]
     }
 
 
