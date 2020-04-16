@@ -1,5 +1,6 @@
 import re
 import sqlite3
+from datetime import datetime
 
 try:
     from Modules.Resources.Static_Information.Constants import expo_messages, resources
@@ -18,7 +19,7 @@ class Message:
     def __init__(self, acc, msg):
         self.acc = acc
         self.id = msg["data-msg-id"]
-        self.timestamp = msg.find("span", {"class": "msg_date"}).text  # datetime of recieving the message
+        self.timestamp = convert_timestamp(msg.find("span", {"class": "msg_date"}).text)  # datetime of recieving the message
         self.msg_from = msg.find("span", {"class": "msg_sender"}).text  # Name of Player/Computer that sent the msg
 
     def delete_message(self):
@@ -176,7 +177,7 @@ class ExpoMessage(Message):
         c.execute("""
                 CREATE TABLE IF NOT EXISTS EXPO_MESSAGES(
                 id integer primary key,
-                expo_timestamp text,
+                expo_timestamp datetime,
                 msg_from text,
                 content text,
                 result_type text, 
@@ -193,7 +194,7 @@ class ExpoMessage(Message):
             CREATE TABLE IF NOT EXISTS EXPO_MESSAGES_DETAILS(
                     id integer not null,
                     universe text,
-                    expo_timestamp text,
+                    expo_timestamp datetime,
                     content text,
                     result_type text,
                     result_details text not null,
@@ -206,3 +207,9 @@ class ExpoMessage(Message):
             self.id, self.acc.server_name, self.timestamp, self.content, self.result_type, details, amount)
         c.execute(statement, tuple)
         conn.commit()
+
+def convert_timestamp(s):
+    d = s.split(' ')[0].split('.')
+    t = s.split(' ')[1].split(':')
+
+    return datetime(int(d[2]), int(d[1]), int(d[0]), int(t[0]), int(t[1]), int(t[2]))
