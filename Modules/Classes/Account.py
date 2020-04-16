@@ -52,6 +52,7 @@ class Account:
         # todo: get class (e.g. for expo)
         self.universe = universe
         self.username = username
+        self.player_name = ''
         self.password = password
         self.chat_token = None
         self.sendfleet_token = None
@@ -104,6 +105,7 @@ class Account:
         for account in accounts:
             if account['server']['number'] == self.server_number:
                 self.server_id = account['id']
+                self.player_name = account['name']
                 self.server_language = account['server']['language']
         # except TypeError:
         #     print("No valid login information!")
@@ -125,6 +127,8 @@ class Account:
                     self.server_settings[key] = server["settings"][key]
                 break
         self.get_ogame_api()  # API to get Players/Planets
+
+        print(f'Login user {self.player_name} in universe {self.server_name} successful')
 
     def read_in_researches(self):
         response = self.session.get('https://s{}-{}.ogame.gameforge.com/game/index.php?page=ingame&'
