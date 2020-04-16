@@ -74,6 +74,7 @@ class Account:
         # todo: get class (e.g. for expo)
         self.universe = universe
         self.username = username
+        self.player_name = ''
         self.password = password
         self.AccountFunctions = AccountFunctions(self)
         self.chat_token = None
@@ -127,6 +128,7 @@ class Account:
         for account in accounts:
             if account['server']['number'] == self.server_number:
                 self.server_id = account['id']
+                self.player_name = account['name']
                 self.server_language = account['server']['language']
         # except TypeError:
         #     print("No valid login information!")
@@ -148,6 +150,8 @@ class Account:
                     self.server_settings[key] = server["settings"][key]
                 break
         self.get_ogame_api()  # API to get Players/Planets
+
+        print(f'Login user {self.player_name} in universe {self.server_name} successful')
 
     def read_in_researches(self):
         response = self.session.get('https://s{}-{}.ogame.gameforge.com/game/index.php?page=ingame&'
@@ -310,6 +314,7 @@ class Account:
                 self.spy_messages[msg["data-msg-id"]] = SpyMessage(self, msg)
 
     def get_expo_messages(self, tab=22):
+        print('read expo messages from account')
         """
         read messages from spy-inbox.
         :param tab: int (Representing the OGame internal ID for different Inboxes.
@@ -336,6 +341,8 @@ class Account:
             for msg in soup.findAll("li", {"class": 'msg'}):
                 if msg["data-msg-id"] not in self.expo_messages:
                     self.expo_messages[msg["data-msg-id"]] = ExpoMessage(self, msg)
+
+        print('All expo messages pushed into database')
 
     def chk_get_attacked(self):
         """

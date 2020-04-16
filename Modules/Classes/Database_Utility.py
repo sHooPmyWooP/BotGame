@@ -36,10 +36,12 @@ def query_database(conn):
     c = conn.cursor()
     c.execute("""
             CREATE TABLE IF NOT EXISTS EXPO_MESSAGES(
-            id integer primary key,
-            expo_timestamp text,
-            msg_from text,
-            content text);
+                id integer primary key,
+                expo_timestamp text,
+                msg_from text,
+                content text,
+                result_type text, 
+                universe text);
             """)
 
 

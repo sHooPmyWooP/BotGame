@@ -39,7 +39,6 @@ class Message:
         else:
             return False
 
-
 class SpyMessage(Message):
     def __init__(self, acc, msg):
         super().__init__(acc, msg)
@@ -133,7 +132,7 @@ class ExpoMessage(Message):
         self.push_expo_message_to_db()
 
     def push_expo_message_to_db(self):
-        conn = sqlite3.connect('../Resources/db/messages.db')
+        conn = sqlite3.connect('Modules/Resources/db/messages.db')
         c = conn.cursor()
 
         self.push_table_expo_message(conn, c)
@@ -167,6 +166,12 @@ class ExpoMessage(Message):
             for i, ship in enumerate(ships):
                 self.push_table_expo_message_details(conn, c, ship, amount[i])
 
+        if self.result_type == 'dark_matter':
+            pattern = re.compile('Dunkle Materie' + ' (\d*\.)*\d+')
+            if pattern.search(self.content):
+                self.push_table_expo_message_details(conn, c, 'Dunkle Materie', re.search('(\d*\.)*\d+', self.content)
+                                                     .group(0).replace(".", ""))
+
     def push_table_expo_message(self, conn, c):
         c.execute("""
                 CREATE TABLE IF NOT EXISTS EXPO_MESSAGES(
@@ -174,11 +179,12 @@ class ExpoMessage(Message):
                 expo_timestamp text,
                 msg_from text,
                 content text,
-                result_type text);
+                result_type text, 
+                universe text);
                 """)
 
-        statement = "INSERT OR REPLACE INTO 'EXPO_MESSAGES' VALUES (?, ?, ?, ?, ?);"
-        tuple = (self.id, self.timestamp, self.msg_from, self.content, self.result_type)
+        statement = "INSERT OR REPLACE INTO 'EXPO_MESSAGES' VALUES (?, ?, ?, ?, ?, ?);"
+        tuple = (self.id, self.timestamp, self.msg_from, self.content, self.result_type, self.acc.server_name)
         c.execute(statement, tuple)
         conn.commit()
 
@@ -186,6 +192,7 @@ class ExpoMessage(Message):
         c.execute("""
             CREATE TABLE IF NOT EXISTS EXPO_MESSAGES_DETAILS(
                     id integer not null,
+                    universe text,
                     expo_timestamp text,
                     content text,
                     result_type text,
@@ -194,8 +201,8 @@ class ExpoMessage(Message):
                     PRIMARY KEY (id, result_details)
                     );
         """)
-        statement = "INSERT OR REPLACE INTO 'EXPO_MESSAGES_DETAILS' VALUES (?, ?, ?, ?, ?, ?);"
+        statement = "INSERT OR REPLACE INTO 'EXPO_MESSAGES_DETAILS' VALUES (?, ?, ?, ?, ?, ?, ?);"
         tuple = (
-            self.id, self.timestamp, self.content, self.result_type, details, amount)
+            self.id, self.acc.server_name, self.timestamp, self.content, self.result_type, details, amount)
         c.execute(statement, tuple)
         conn.commit()
