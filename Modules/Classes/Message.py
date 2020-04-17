@@ -173,6 +173,10 @@ class ExpoMessage(Message):
                 self.push_table_expo_message_details(conn, c, 'Dunkle Materie', re.search('(\d*\.)*\d+', self.content)
                                                      .group(0).replace(".", ""))
 
+        if self.result_type == 'item':
+            item = ''.join(self.content.split(' wurde dem Inventar hinzugefügt')[0].split('.Ein ')[1])
+            self.push_table_expo_message_details(conn, c, item, 1)
+
     def push_table_expo_message(self, conn, c):
         c.execute("""
                 CREATE TABLE IF NOT EXISTS EXPO_MESSAGES(
