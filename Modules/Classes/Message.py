@@ -151,31 +151,30 @@ class ExpoMessage(Message):
         return "unclassified"
 
     def get_result_details_amount(self, conn, c):
-        for result in ["nothing", "delay", "pirats", "aliens", "delayed_return", "faster_return"]:
-            if self.result_type == result:
-                self.push_table_expo_message_details(conn, c, result, 1)
-        if self.result_type == "resources":
+        if self.result_type in ["nothing", "delay", "pirats", "aliens", "delayed_return", "faster_return"]:
+            self.push_table_expo_message_details(conn, c, self.result_type, 1)
+        elif self.result_type == "resources":
             for res in [resources.metall, resources.kristall, resources.deuterium]:
                 pattern = re.compile(res + ' (\d*\.)*\d+')
                 if pattern.search(self.content):
                     self.push_table_expo_message_details(conn, c, res, re.search('(\d*\.)*\d+', self.content)
                                                          .group(0).replace(".", ""))
-                    return
-        if self.result_type == "ships":
+        elif self.result_type == "ships":
             ships = re.split(': \d+', self.content.split("sich der Flotte an:")[1])[:-1]
             amount = [i for i in re.findall('(\d+\.?)+\d?', self.content)]
             for i, ship in enumerate(ships):
                 self.push_table_expo_message_details(conn, c, ship, amount[i])
 
-        if self.result_type == 'dark_matter':
+        elif self.result_type == 'dark_matter':
             pattern = re.compile('Dunkle Materie' + ' (\d*\.)*\d+')
             if pattern.search(self.content):
                 self.push_table_expo_message_details(conn, c, 'Dunkle Materie', re.search('(\d*\.)*\d+', self.content)
                                                      .group(0).replace(".", ""))
-
-        if self.result_type == 'item':
+        elif self.result_type == 'item':
             item = ''.join(self.content.split(' wurde dem Inventar hinzugefügt')[0].split('.Ein ')[1])
             self.push_table_expo_message_details(conn, c, item, 1)
+        else:
+            print(f'expo message with id {self.id} cannot pushed into details database. Result_type not found')
 
     def push_table_expo_message(self, conn, c):
         c.execute("""
