@@ -311,8 +311,8 @@ class CelestialReader:
                                                                             construction_finished_in_seconds,
                                                                             self.celestial)
 
-    def read_fleet(self, read_moon=False):
-        id = self.celestial.id if not read_moon else self.celestial.moon.id
+    def read_fleet(self):
+        id = self.celestial.id
         response = self.celestial.acc.session.get('https://s{}-{}.ogame.gameforge.com/game/index.php?page=ingame&'
                                                   'component=shipyard&cp={}'
                                                   .format(self.celestial.acc.server_number,

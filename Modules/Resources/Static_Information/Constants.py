@@ -42,7 +42,8 @@ class expo_messages:
                     "uraltes Strategiespiel"],
         "delayed_return": ["verzögerte", "verspätung", "patzer des navigators",
                            "länger dauern als ursprünglich gedacht"],
-        "faster_return": ["rückkopplung in den energiespulen", "deine expedition kehrt nun etwas früher"],
+        "faster_return": ["rückkopplung in den energiespulen", "deine expedition kehrt nun etwas früher",
+                          "rückflug zu verkürzen"],
         "fleet_loss": ["flotte endgültig verloren"],
         "ships": ["schlossen sich der flotte an"],
         "item": ["unbemannten flieger", "wertvolles Artefakt", "gegenstand hinterlassen"]

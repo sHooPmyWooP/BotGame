@@ -20,9 +20,17 @@ class Message:
         self.id = msg["data-msg-id"]
         self.timestamp = msg.find("span", {"class": "msg_date"}).text  # datetime of recieving the message
         self.msg_from = msg.find("span", {"class": "msg_sender"}).text  # Name of Player/Computer that sent the msg
+        print(f"Added msg {self.id} from {self.timestamp}")
 
     def delete_message(self):
         """deletes the message from the inbox"""
+
+        if isinstance(self, ExpoMessage):
+            if self.result_type == "unclassified":
+                print(f"Not deleting Message {self.id} because result_type is unclassified. "
+                      f"Please adjust Classification and rerun.")
+                return False
+
         form_data = {
             "messageId": self.id,
             "action": 103,
@@ -132,7 +140,7 @@ class ExpoMessage(Message):
         self.push_expo_message_to_db()
 
     def push_expo_message_to_db(self):
-        conn = sqlite3.connect('Modules/Resources/db/messages.db')
+        conn = sqlite3.connect('../Resources/db/messages.db')
         c = conn.cursor()
 
         self.push_table_expo_message(conn, c)

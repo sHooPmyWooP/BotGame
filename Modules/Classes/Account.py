@@ -213,14 +213,24 @@ class Account:
                     pass
 
     def read_in_all_celestials(self, planets=True):
-        ids = self.get_planet_ids() if planets else self.get_moon_ids()
+        """
+        Read in all information for all celestials. If moons are included depends on parameter planets
+        :param planets: Boolean - True if only planets should be read, includes moons otherwise
+        :return:
+        """
+        ids = self.get_planet_ids() if planets else self.get_planet_ids() + self.get_moon_ids()
         for id in ids:
             celestial = Celestial(self, id)
             celestial.reader.read_all()
-            self.planets.append(celestial) if planets else self.moons.append(celestial)
+            self.planets.append(celestial) if not celestial.is_moon else self.moons.append(celestial)
             print(celestial.name + ' with id ' + str(celestial.id) + ' was added')
 
     def read_in_celestial(self, id):
+        """
+        Reads in a specific celestial which is identified by OGame internal ID
+        :param id: int  - can be taken from html address in the format cp=12345678
+        :return: Celestial
+        """
         celestial = Celestial(self, id)
         celestial.reader.read_all()
         if not celestial.is_moon:
@@ -231,6 +241,10 @@ class Account:
         return celestial
 
     def get_planet_ids(self):
+        """
+        Get all IDs of Planets
+        :return: int[ ]
+        """
         planet_ids = []
         marker_string = 'id="planet-'
         for planet_id in re.finditer(marker_string, self.session.content):
@@ -240,6 +254,10 @@ class Account:
         return planet_ids
 
     def get_moon_ids(self):
+        """
+        Get all IDs of Moons
+        :return: int[ ]
+        """
         moon_ids = []
         soup = BeautifulSoup(self.session.content, features="html.parser")
         moon_elements = soup.find_all("a", {"class": "moonlink"})
@@ -251,7 +269,8 @@ class Account:
 
     def init_celestials(self):
         """
-        Initiates the celestials with base information like id, coords and such
+        Initiates the celestials with base information ID, is_moon, coordinate, name, fields,
+        temperature (planet only)
         """
         for id in self.get_planet_ids() + self.get_moon_ids():
             for celestial in self.planets + self.moons:
@@ -263,28 +282,22 @@ class Account:
                 self.planets.append(celestial) if not celestial.is_moon else self.moons.append(celestial)
 
     def get_celestial_by_coord(self, coord):
+        """
+        :param coord: Coordinate
+        :return: Celestial
+        """
         for celestial in self.moons + self.planets:
             if celestial.coordinates.get_coord_str() == coord.get_coord_str():
                 return celestial
 
-    def read_in_all_celestial_basics(self):
-        ids = self.get_planet_ids() + self.get_moon_ids()
-        for id in ids:
-            celestial = Celestial(self, id)
-            celestial.reader.read_base_infos()
-            self.planets.append(celestial) if not celestial.is_moon else self.moons.append(celestial)
-
     def read_in_all_fleets(self):
+        """
+        Populate Ships{} for all Celestials
+        """
         for planet in self.planets:
             planet.reader.read_fleet()
         for moon in self.moons:
             moon.reader.read_fleet()
-
-    def read_in_fleet_by_id(self, celestial_id):
-        for celestial in self.planets + self.moons:
-            if celestial.id == celestial_id:
-                celestial.reader.read_fleet()
-                break
 
     def get_init_chat_token(self):
         marker_string = 'var ajaxChatToken = '
@@ -536,7 +549,7 @@ class AccountFunctions:
             coord_obj = Coordinate(coord[0], coord[1], coord[2], coord[3])
             celestial = self.acc.get_celestial_by_coord(coord_obj)
             celestials = [celestial]
-            self.acc.read_in_fleet_by_id(celestial.id)
+            celestial.reader.read_in_fleet_by_id()
         else:
             # If not user_defined_planet get celestial with max struct points (determined by settings)
             self.acc.read_in_all_fleets()
@@ -618,48 +631,73 @@ class AccountFunctions:
         return d[uni]
 
     def chk_for_expo_trash(self):
-        self.acc.read_in_all_celestial_basics()
+        """
+        Check if in any system where own celestials are initialized has debris on position 16
+        :return: Coordinate[ ]
+        """
+        if not self.acc.planets or not self.acc.moons:
+            print("Read in Celestials beforehand! Coords needed to identify relevant systems")
+            quit()
+        expo_debris = []
         systems = []
         for planet in self.acc.planets:
             systems.append(str(planet.coordinates.galaxy) + ":" + str(planet.coordinates.system))
-        expo_trash_coords_unique = [Coordinate(coord.split(":")[0],
-                                               coord.split(":")[1], 16, 3) for coord in set(systems)]
-        print("Done..")
+        systems_expo_unique = [Coordinate(coord.split(":")[0],
+                                          coord.split(":")[1], 16) for coord in set(systems)]
+        for coord in systems_expo_unique:
+            debris = self.get_debris_for_galaxy_system(coord.galaxy, coord.system)
+            for debris_coord in debris:
+                if debris_coord[0].position == 16:
+                    expo_debris.append(debris_coord)
+        return expo_debris
 
     def get_debris_for_galaxy_system(self, galaxy, system):
+        """
+        Get list of Debris in System
+        :param galaxy: int
+        :param system: int
+        :return: Debris_in_System[[Coordinate, Resources, int Recyclers/Pathfinders], ]
+        """
         form_data = {'galaxy': galaxy,
                      'system': system}
         response = self.acc.session.post(
             f'https://s{self.acc.server_number}-{self.acc.server_language}.ogame.gameforge.com/game/index.php?page=ingame&component=galaxyContent&ajax=1',
             headers={'X-Requested-With': 'XMLHttpRequest'}, data=form_data).json()
         soup = BeautifulSoup(response["galaxy"], features="html.parser")
-        debris_raw = [debris.text.strip() for debris in soup.find_all("td", {"class": "debris"}) if
+        debris_raw = [debris.text.strip() for debris in soup.find_all("tr", {"class": "expeditionDebrisSlot"}) if
                       debris.text.strip() != '']
+        debris_raw += [debris.text.strip() for debris in soup.find_all("td", {"class": "debris"}) if
+                       debris.text.strip() != '']
         debris_list = []
         if debris_raw:
             for debris in debris_raw:
                 # Coordinates
-                coord_raw = re.search("\[\d+:\d+:\d\]", debris).group(0)
+                coord_raw = re.search("\[\d+:\d+:\d+\]", debris).group(0)
                 coord_cleaned = coord_raw.replace("[", "").replace("]", "").split(":")
                 coord = Coordinate(coord_cleaned[0], coord_cleaned[1], coord_cleaned[2], 3)
                 # Resources
                 debris_metal = re.search("\d+", debris.replace(".", "").split("Metall")[1]).group(0)
                 debris_crystal = re.search("\d+", debris.replace(".", "").split("Kristall")[1]).group(0)
                 resources = Resources(debris_metal, debris_crystal, 0)
+                # Needed Ships to Recycle
+                ships_raw = re.search("Benötigte.*: \d+", debris).group(0).replace(".",
+                                                                                   "")  # todo: Adjust to match delimiter 1.000 etc.
+                ships = int(re.search("\d+", ships_raw).group(0))
 
-                debris_list.append([coord, resources])
-
-        print("Done...")
+                debris_list.append([coord, resources, ships])
+        return debris_list
 
 
 if __name__ == "__main__":
     a1 = Account(universe="Pasiphae", username="strabbit@web.de", password="OGame!4myself")
-    a1.AccountFunctions.get_debris_for_galaxy_system(1, 139)
+    a1.init_celestials()
+    a1.AccountFunctions.chk_for_expo_trash()
+    # a1.AccountFunctions.chk_for_expo_trash()
     # a1.AccountFunctions.get_expo_trash()
     #
     # a1.get_expo_messages()
-    # """
+    # # """
     # for message in a1.expo_messages:
     #     a1.expo_messages[message].delete_message()
-    # """
+    # # """
     print("Done...")
