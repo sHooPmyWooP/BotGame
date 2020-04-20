@@ -49,9 +49,9 @@ def query_database(conn):
 
 def main():
     dir_path = os.path.dirname(os.path.abspath(__file__))
-    database = os.path.join(os.path.abspath(os.path.join(dir_path, os.pardir)), 'Resources', 'db', '')
+    database = os.path.join(os.path.abspath(os.path.join(dir_path, os.pardir)), 'Resources', 'db', 'messages.db')
     # create a database connection
-    conn = create_connection(database + 'messages.db')
+    conn = create_connection(database)
     query_database(conn)
     # with conn:
     #     #     select_all(conn, "spy_messages")

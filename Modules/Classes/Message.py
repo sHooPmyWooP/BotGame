@@ -1,5 +1,6 @@
 import re
 import sqlite3
+import os
 from datetime import datetime
 
 try:
@@ -133,7 +134,9 @@ class ExpoMessage(Message):
         self.push_expo_message_to_db()
 
     def push_expo_message_to_db(self):
-        conn = sqlite3.connect('Modules/Resources/db/messages.db')
+        dir_path = os.path.dirname(os.path.abspath(__file__))
+        database = os.path.join(os.path.abspath(os.path.join(dir_path, os.pardir)), 'Resources', 'db', 'messages.db')
+        conn = sqlite3.connect(database)
         c = conn.cursor()
 
         self.push_table_expo_message(conn, c)
@@ -190,6 +193,7 @@ class ExpoMessage(Message):
         statement = "INSERT OR REPLACE INTO 'EXPO_MESSAGES' VALUES (?, ?, ?, ?, ?, ?);"
         tuple = (self.id, self.timestamp, self.msg_from, self.content, self.result_type, self.acc.server_name)
         c.execute(statement, tuple)
+        print(tuple)
         conn.commit()
 
     def push_table_expo_message_details(self, conn, c, details, amount):
