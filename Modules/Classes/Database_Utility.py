@@ -1,5 +1,7 @@
 import sqlite3
 from sqlite3 import Error
+import os
+import os.path
 
 
 def create_connection(db_file):
@@ -46,9 +48,10 @@ def query_database(conn):
 
 
 def main():
-    database = r'..\Resources\db\messages.db'
+    dir_path = os.path.dirname(os.path.abspath(__file__))
+    database = os.path.join(os.path.abspath(os.path.join(dir_path, os.pardir)), 'Resources', 'db', '')
     # create a database connection
-    conn = create_connection(database)
+    conn = create_connection(database + 'messages.db')
     query_database(conn)
     # with conn:
     #     #     select_all(conn, "spy_messages")
