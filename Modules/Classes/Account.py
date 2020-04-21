@@ -10,6 +10,8 @@ import pause
 import requests
 from bs4 import BeautifulSoup
 
+from Modules.Classes.Marketplace import Marketplace
+
 sys.path.append(
     path.dirname(path.dirname(path.abspath(__file__))))  # necessary to make the file structure work on raspi
 
@@ -99,6 +101,7 @@ class Account:
         self.fleet_count = [0, 0]  # current/max
         self.offers_count = [0, 0]  # current/max
         self.missions = []
+        self.marketplace = Marketplace(self)
 
         if user_agent is None:
             user_agent = {
@@ -108,6 +111,7 @@ class Account:
         self.session.headers.update(user_agent)
 
         self.login()
+        self.index_php = f"https://s{self.server_number}-{self.server_language}.ogame.gameforge.com/game/index.php"
 
     def login(self):
         self.planets = []  # planets get appended to the list
@@ -630,7 +634,7 @@ class AccountFunctions:
             d = json.load(f)
         return d[uni]
 
-    def chk_for_expo_trash(self):
+    def chk_for_expo_debris(self):
         """
         Check if in any system where own celestials are initialized has debris on position 16
         :return: Coordinate[ ]
@@ -680,24 +684,44 @@ class AccountFunctions:
                 debris_crystal = re.search("\d+", debris.replace(".", "").split("Kristall")[1]).group(0)
                 resources = Resources(debris_metal, debris_crystal, 0)
                 # Needed Ships to Recycle
-                ships_raw = re.search("Benötigte.*: \d+", debris).group(0).replace(".",
-                                                                                   "")  # todo: Adjust to match delimiter 1.000 etc.
+                # todo: Adjust to match delimiter 1.000 etc.
+                ships_raw = re.search("Benötigte.*: \d+", debris).group(0).replace(".", "")
+
                 ships = int(re.search("\d+", ships_raw).group(0))
 
                 debris_list.append([coord, resources, ships])
         return debris_list
 
+    def recycle_expo_debris(self, radius=2):
+        expo_debris = self.chk_for_expo_debris()
+        if not expo_debris:
+            print("No Expo debris currently in range")
+            return False
+        celestials = self.acc.moons + self.acc.planets
+
+        for coord in expo_debris:
+            celestials = coord[0].get_own_celestials_in_range(celestials, radius)
+            celestials_rel_distance = []
+            for celestial in celestials:
+                celestials_rel_distance.append([celestial, coord[0].calculate_relative_distance(celestial.coordinates)])
+
+            celestials_sorted_by_distance = sorted(celestials_rel_distance, key=lambda x: (x[1], x[1]), reverse=False)
+
+            recs_needed = coord[2]
+
 
 if __name__ == "__main__":
     a1 = Account(universe="Pasiphae", username="strabbit@web.de", password="OGame!4myself")
-    a1.init_celestials()
-    a1.AccountFunctions.chk_for_expo_trash()
-    # a1.AccountFunctions.chk_for_expo_trash()
-    # a1.AccountFunctions.get_expo_trash()
-    #
+    # # a1.init_celestials()
+    # # a1.AccountFunctions.recycle_expo_debris()
+    # # a1.AccountFunctions.chk_for_expo_debris()
+    # # a1.AccountFunctions.get_expo_debris()
+    # #
     # a1.get_expo_messages()
-    # # """
+    # # # """
     # for message in a1.expo_messages:
     #     a1.expo_messages[message].delete_message()
-    # # """
+    # # # """
+    a1.marketplace.set_buying_max_page()
+
     print("Done...")
