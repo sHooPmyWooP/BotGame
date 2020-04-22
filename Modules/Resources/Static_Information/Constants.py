@@ -64,6 +64,7 @@ class static_lists:
              "Kolonieschiff",
              "Leichter Jäger",
              "Schwerer Jäger",
+             "Pathfinder",
              "Kreuzer", "Schlachtschiff",
              "Schlachtkreuzer",
              "Bomber",

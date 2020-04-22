@@ -1,4 +1,5 @@
 import datetime
+
 try:  # Resources
     from .Resources import Resources
 except ModuleNotFoundError:
@@ -6,9 +7,23 @@ except ModuleNotFoundError:
 except ImportError:
     from Modules.Classes.Resources import Resources
 
+
 class Mission:
     def __init__(self, id, mission_type, return_flight, hostile, coord_from, coord_to, arrival_time,
-                 resources=Resources(), ships=[]):
+                 resources=Resources(), ships=None):
+        """
+        :param id: int
+        :param mission_type: mission_type_id
+        :param return_flight: Boolean
+        :param hostile: Boolean
+        :param coord_from: Coordinate
+        :param coord_to: Coordinate
+        :param arrival_time:
+        :param resources: Ressources
+        :param ships: [[Name, Quantity],]
+        """
+        if ships is None:
+            ships = [[]]
         self.id = id
         self.mission_type = mission_type
         self.return_flight = return_flight

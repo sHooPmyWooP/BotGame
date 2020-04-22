@@ -25,8 +25,8 @@ class Coordinate:
         min_system = min(self.system - radius, 1)
         max_system = max(self.system + radius, 499)
         for celestial in celestials:
-            if celestial.galaxy == self.galaxy:
-                if min_system <= celestial.system <= max_system:
+            if celestial.coordinates.galaxy == self.galaxy:
+                if min_system <= celestial.coordinates.system <= max_system:
                     celestials_in_range.append(celestial)
         return celestials_in_range
 

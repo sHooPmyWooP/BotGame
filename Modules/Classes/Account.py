@@ -434,6 +434,7 @@ class Account:
 
                 details_rows_clean = [row for row in details_rows if row.text != ' ']
 
+                # RESOURCES
                 for i in range(0, int(len(details_rows_clean)), 2):
                     text = details_rows_clean[i].text.replace(":", "")
                     value = details_rows_clean[i + 1].text.replace(".", "")
@@ -692,36 +693,64 @@ class AccountFunctions:
                 debris_list.append([coord, resources, ships])
         return debris_list
 
-    def recycle_expo_debris(self, radius=2):
+    def recycle_expo_debris(self, radius=20, pf_threshold=10):
         expo_debris = self.chk_for_expo_debris()
         if not expo_debris:
             print("No Expo debris currently in range")
             return False
-        celestials = self.acc.moons + self.acc.planets
 
         for coord in expo_debris:
-            celestials = coord[0].get_own_celestials_in_range(celestials, radius)
-            celestials_rel_distance = []
-            for celestial in celestials:
-                celestials_rel_distance.append([celestial, coord[0].calculate_relative_distance(celestial.coordinates)])
+            pf_needed = coord[2]
+            while pf_needed >= pf_threshold:
+                # Check if debris is already handled
+                self.acc.read_missions()
+                pf_on_the_way = 0
+                for mission in self.acc.missions:
+                    if mission.coord_to.get_coord_str() == coord[0].get_coord_str():
+                        if mission.mission_type == mission_type_ids.recycle:
+                            for ship in mission.ships:
+                                if ship[0] == "Pathfinder":
+                                    pf_on_the_way += ship[1]
 
-            celestials_sorted_by_distance = sorted(celestials_rel_distance, key=lambda x: (x[1], x[1]), reverse=False)
+                if pf_needed <= pf_on_the_way:
+                    break
+                else:
+                    pf_needed -= pf_on_the_way
 
-            recs_needed = coord[2]
+                # Get Celestial to send PF from
+                celestials = self.acc.moons + self.acc.planets
+                celestials = coord[0].get_own_celestials_in_range(celestials, radius)
+                celestials_rel_distance = []
+                for celestial in celestials:
+                    celestials_rel_distance.append(
+                        [celestial, coord[0].calculate_relative_distance(celestial.coordinates)])
+                celestials_sorted_by_distance = sorted(celestials_rel_distance, key=lambda x: (x[1], x[1]),
+                                                       reverse=False)
+
+                for celestial in celestials_sorted_by_distance:
+                    celestial = celestial[0]
+                    celestial.reader.read_fleet()
+                    pf = celestial.ships["Pathfinder"]
+                    if pf.count >= pf_needed:
+                        #  Send Fleet
+                        celestial.send_fleet(mission_type_ids.recycle, coord[0], [[pf, pf_needed]], 2,
+                                             resources=[0, 0, 0],
+                                             speed=10, holdingtime=0)
+                        break
+        print("Done")
 
 
 if __name__ == "__main__":
     a1 = Account(universe="Pasiphae", username="strabbit@web.de", password="OGame!4myself")
-    # # a1.init_celestials()
-    # # a1.AccountFunctions.recycle_expo_debris()
-    # # a1.AccountFunctions.chk_for_expo_debris()
-    # # a1.AccountFunctions.get_expo_debris()
+    a1.init_celestials()
+    a1.AccountFunctions.recycle_expo_debris()
+
     # #
     # a1.get_expo_messages()
     # # # """
     # for message in a1.expo_messages:
     #     a1.expo_messages[message].delete_message()
     # # # """
-    a1.marketplace.set_buying_max_page()
+    # a1.marketplace.get_offers_by_action("buying")
 
     print("Done...")
