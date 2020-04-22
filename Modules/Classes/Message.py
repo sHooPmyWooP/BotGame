@@ -1,5 +1,7 @@
 import re
 import sqlite3
+import os
+from datetime import datetime
 
 try:
     from Modules.Resources.Static_Information.Constants import expo_messages, resources
@@ -18,19 +20,11 @@ class Message:
     def __init__(self, acc, msg):
         self.acc = acc
         self.id = msg["data-msg-id"]
-        self.timestamp = msg.find("span", {"class": "msg_date"}).text  # datetime of recieving the message
+        self.timestamp = convert_timestamp(msg.find("span", {"class": "msg_date"}).text)  # datetime of recieving the message
         self.msg_from = msg.find("span", {"class": "msg_sender"}).text  # Name of Player/Computer that sent the msg
-        print(f"Added msg {self.id} from {self.timestamp}")
 
     def delete_message(self):
         """deletes the message from the inbox"""
-
-        if isinstance(self, ExpoMessage):
-            if self.result_type == "unclassified":
-                print(f"Not deleting Message {self.id} because result_type is unclassified. "
-                      f"Please adjust Classification and rerun.")
-                return False
-
         form_data = {
             "messageId": self.id,
             "action": 103,
@@ -140,7 +134,9 @@ class ExpoMessage(Message):
         self.push_expo_message_to_db()
 
     def push_expo_message_to_db(self):
-        conn = sqlite3.connect('../Resources/db/messages.db')
+        dir_path = os.path.dirname(os.path.abspath(__file__))
+        database = os.path.join(os.path.abspath(os.path.join(dir_path, os.pardir)), 'Resources', 'db', 'messages.db')
+        conn = sqlite3.connect(database)
         c = conn.cursor()
 
         self.push_table_expo_message(conn, c)
@@ -158,33 +154,36 @@ class ExpoMessage(Message):
         return "unclassified"
 
     def get_result_details_amount(self, conn, c):
-        for result in ["nothing", "delay", "pirats", "aliens", "delayed_return", "faster_return"]:
-            if self.result_type == result:
-                self.push_table_expo_message_details(conn, c, result, 1)
-        if self.result_type == "resources":
+        if self.result_type in ["nothing", "delay", "pirats", "aliens", "delayed_return", "faster_return"]:
+            self.push_table_expo_message_details(conn, c, self.result_type, 1)
+        elif self.result_type == "resources":
             for res in [resources.metall, resources.kristall, resources.deuterium]:
                 pattern = re.compile(res + ' (\d*\.)*\d+')
                 if pattern.search(self.content):
                     self.push_table_expo_message_details(conn, c, res, re.search('(\d*\.)*\d+', self.content)
                                                          .group(0).replace(".", ""))
-                    return
-        if self.result_type == "ships":
+        elif self.result_type == "ships":
             ships = re.split(': \d+', self.content.split("sich der Flotte an:")[1])[:-1]
             amount = [i for i in re.findall('(\d+\.?)+\d?', self.content)]
             for i, ship in enumerate(ships):
                 self.push_table_expo_message_details(conn, c, ship, amount[i])
 
-        if self.result_type == 'dark_matter':
+        elif self.result_type == 'dark_matter':
             pattern = re.compile('Dunkle Materie' + ' (\d*\.)*\d+')
             if pattern.search(self.content):
                 self.push_table_expo_message_details(conn, c, 'Dunkle Materie', re.search('(\d*\.)*\d+', self.content)
                                                      .group(0).replace(".", ""))
+        elif self.result_type == 'item':
+            item = ''.join(self.content.split(' wurde dem Inventar hinzugefügt')[0].split('.Ein ')[1])
+            self.push_table_expo_message_details(conn, c, item, 1)
+        else:
+            print(f'expo message with id {self.id} cannot pushed into details database. Result_type not found')
 
     def push_table_expo_message(self, conn, c):
         c.execute("""
                 CREATE TABLE IF NOT EXISTS EXPO_MESSAGES(
                 id integer primary key,
-                expo_timestamp text,
+                expo_timestamp datetime,
                 msg_from text,
                 content text,
                 result_type text, 
@@ -194,6 +193,7 @@ class ExpoMessage(Message):
         statement = "INSERT OR REPLACE INTO 'EXPO_MESSAGES' VALUES (?, ?, ?, ?, ?, ?);"
         tuple = (self.id, self.timestamp, self.msg_from, self.content, self.result_type, self.acc.server_name)
         c.execute(statement, tuple)
+        print(tuple)
         conn.commit()
 
     def push_table_expo_message_details(self, conn, c, details, amount):
@@ -201,7 +201,7 @@ class ExpoMessage(Message):
             CREATE TABLE IF NOT EXISTS EXPO_MESSAGES_DETAILS(
                     id integer not null,
                     universe text,
-                    expo_timestamp text,
+                    expo_timestamp datetime,
                     content text,
                     result_type text,
                     result_details text not null,
@@ -214,3 +214,9 @@ class ExpoMessage(Message):
             self.id, self.acc.server_name, self.timestamp, self.content, self.result_type, details, amount)
         c.execute(statement, tuple)
         conn.commit()
+
+def convert_timestamp(s):
+    d = s.split(' ')[0].split('.')
+    t = s.split(' ')[1].split(':')
+
+    return datetime(int(d[2]), int(d[1]), int(d[0]), int(t[0]), int(t[1]), int(t[2]))
