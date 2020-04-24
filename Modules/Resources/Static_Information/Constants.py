@@ -33,7 +33,8 @@ class expo_messages:
         "dark_matter": ["dunkle materie"],
         "pirats": ["piraten", "weltraumpiraten", "primitive barbaren", "sternen-freibeuter"],
         "aliens": ["fremdartige rasse", "unbekannten spezies", "fremdartig anmutenden schiffe",
-                   "unbekannter schiffe", "fremdartig anmutende schiffe", "unbekannte Spezies greift", "Aggressoren konnten nicht identifiziert werden"],
+                   "unbekannter schiffe", "fremdartig anmutende schiffe", "unbekannte Spezies greift", "Aggressoren konnten nicht identifiziert werden",
+                   "kriegerischen Alienrasse"],
         "resources": ["erbeutet"],
         "nothing": ["roten riesen", "bestes-bild-des-universums", "kurioser", "das führungsschiff", "leere des alls",
                     "gravitationsfeld",
@@ -43,7 +44,7 @@ class expo_messages:
         "delayed_return": ["verzögerte", "verspätung", "patzer des navigators",
                            "länger dauern als ursprünglich gedacht"],
         "faster_return": ["rückkopplung in den energiespulen", "deine expedition kehrt nun etwas früher", "Rückflug zu verkürzen"],
-        "fleet_loss": ["flotte endgültig verloren", "öffnenden schwarzen Lochs", "Zzzrrt Oh Gott! Krrrzzzzt"],
+        "fleet_loss": ["flotte endgültig verloren", "öffnenden schwarzen Lochs", "Zzzrrt Oh Gott! Krrrzzzzt", "gesamte Expedition vernichtete"],
         "merchant" : ["Repräsentanten mit Tauschwaren"],
         "ships": ["schlossen sich der flotte an"],
         "item": ["unbemannten flieger", "wertvolles Artefakt", "gegenstand hinterlassen"]
