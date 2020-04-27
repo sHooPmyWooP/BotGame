@@ -1,6 +1,8 @@
 import re
 import sqlite3
 import os
+import bs4
+import json
 from datetime import datetime
 
 try:
@@ -19,8 +21,9 @@ class Message:
 
     def __init__(self, acc, msg):
         self.acc = acc
-        self.id = msg["data-msg-id"]
-        self.timestamp = convert_timestamp(msg.find("span", {"class": "msg_date"}).text)  # datetime of recieving the message
+        self.id = int(msg["data-msg-id"])
+        self.timestamp = convert_timestamp(
+            msg.find("span", {"class": "msg_date"}).text)  # datetime of recieving the message
         self.msg_from = msg.find("span", {"class": "msg_sender"}).text  # Name of Player/Computer that sent the msg
 
     def delete_message(self):
@@ -40,6 +43,7 @@ class Message:
             return True
         else:
             return False
+
 
 class SpyMessage(Message):
     def __init__(self, acc, msg):
@@ -154,7 +158,7 @@ class ExpoMessage(Message):
         return "unclassified"
 
     def get_result_details_amount(self, conn, c):
-        if self.result_type in ["nothing", "delay", "pirats", "aliens", "delayed_return", "faster_return"]:
+        if self.result_type in ["nothing", "delay", "pirats", "aliens", "delayed_return", "faster_return", "fleet_loss"]:
             self.push_table_expo_message_details(conn, c, self.result_type, 1)
         elif self.result_type == "resources":
             for res in [resources.metall, resources.kristall, resources.deuterium]:
@@ -193,7 +197,7 @@ class ExpoMessage(Message):
         statement = "INSERT OR REPLACE INTO 'EXPO_MESSAGES' VALUES (?, ?, ?, ?, ?, ?);"
         tuple = (self.id, self.timestamp, self.msg_from, self.content, self.result_type, self.acc.server_name)
         c.execute(statement, tuple)
-        print(tuple)
+        # print(tuple)
         conn.commit()
 
     def push_table_expo_message_details(self, conn, c, details, amount):
@@ -214,6 +218,92 @@ class ExpoMessage(Message):
             self.id, self.acc.server_name, self.timestamp, self.content, self.result_type, details, amount)
         c.execute(statement, tuple)
         conn.commit()
+
+
+class CombatReport(Message):
+    def __init__(self, acc, msg, push_into_db=True, min_units_to_push=1000000):
+        super().__init__(acc, msg)
+        self.json_data = self.get_json_from_cr(acc.session.get(
+            acc.get_http_string() + f'page=standalone&component=displayMessageNewPage&messageId={self.id}&tabid=21&ajax=1').text)
+        print(json.dumps(self.json_data))
+        if self.json_data['isExpedition']:
+            self.expo_msg_id = (self.id + 1)
+
+            # Attacker
+            __attacker_json = self.json_data['attackerJSON']['member'][0]
+            self.attacker_name = __attacker_json['ownerName']
+            self.attacker_coordinate = Coordinate.create_from_string(__attacker_json['ownerCoordinates'])
+
+            # Defender
+            __defender_json = self.json_data['defenderJSON']['member']
+            __defender_json = __defender_json[[x for x in __defender_json][0]]
+            self.defender_class = __defender_json['ownerCharacterClassName']
+            self.defender_coordinates = Coordinate.create_from_string(__defender_json['ownerCoordinates'])
+            self.defender_ships_before_combat = self.get_start_ships()
+            self.defender_lost_ships = self.json_data['defenderJSON']['combatRounds'][-1]['losses']
+            self.debris_metal = self.json_data['debris']['metalTotal']
+            self.debris_crystal = self.json_data['debris']['crystalTotal']
+            s = json.dumps(self.json_data)
+
+            if push_into_db and (self.json_data['statistic']['lostUnitsAttacker'] + self.json_data['statistic'][
+                'lostUnitsDefender']) > min_units_to_push:
+                dir_path = os.path.dirname(os.path.abspath(__file__))
+                database = os.path.join(os.path.abspath(os.path.join(dir_path, os.pardir)), 'Resources', 'db',
+                                        'messages.db')
+                conn = sqlite3.connect(database)
+                c = conn.cursor()
+                self.push_into_db(conn, c)
+        else:
+            return
+
+
+
+    def list_or_dict(self, data=None):
+        return 0 if self.__attacker_is_ai else self.__attacker_id #data[[x for x in data]][0]
+
+    def get_json_from_cr(self, html):
+        soup = bs4.BeautifulSoup(html, 'html.parser')
+
+        scripts = soup.find_all('script')
+        for script in scripts:
+            if 'jQuery.parseJSON' in script.text:
+                jsonStr = script.text.strip()
+                jsonStr = jsonStr.split(';')[0].split('\'')[1]
+                return json.loads(jsonStr)
+        return None
+
+    def get_start_ships(self):
+        ships = {}
+        ships_json = self.json_data['defender'][[x for x in self.json_data['defender']][0]]['shipDetails']
+        for ship_id in ships_json:
+            ships[ship_id] = ships_json[ship_id]['count']
+
+        return ships
+
+    def push_into_db(self, conn, c):
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS COMBAT_REPORTS(
+                    id integer NOT NULL PRIMARY KEY,
+                    universe text,
+                    expo_timestamp datetime,
+                    json text,
+                    expo_id INTEGER,
+                    ships_lost_json text
+                    );
+        """)
+        statement = "INSERT OR REPLACE INTO 'COMBAT_REPORTS' VALUES (?, ?, ?, ?, ?, ?, ?, ?);"
+        # combat report from expo is always one id before expo_message id
+        tuple = (self.id, self.acc.server_name, self.timestamp, json.dumps(self.json_data), self.expo_msg_id, json.dumps(self.defender_lost_ships),
+                 self.debris_metal, self.debris_crystal)
+        c.execute(statement, tuple)
+        conn.commit()
+
+    def get_attacker_id(self, datas):
+        if type(datas) == list:
+            return datas[0]['ownerID']
+        elif type(datas) == dict:
+            return datas[[x for x in datas][0]]['ownerID']
+
 
 def convert_timestamp(s):
     d = s.split(' ')[0].split('.')

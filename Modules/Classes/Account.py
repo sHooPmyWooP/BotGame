@@ -6,7 +6,7 @@ import sys
 import traceback
 from os import path
 
-import pause
+#import pause
 import requests
 from bs4 import BeautifulSoup
 
@@ -20,11 +20,11 @@ except ModuleNotFoundError:
 except ImportError:
     from Modules.Classes.Coordinate import Coordinate
 try:  # SpyMessage
-    from .Message import SpyMessage, ExpoMessage
+    from .Message import SpyMessage, ExpoMessage, CombatReport
 except ModuleNotFoundError:
-    from Modules.Classes.Message import SpyMessage, ExpoMessage
+    from Modules.Classes.Message import SpyMessage, ExpoMessage, CombatReport
 except ImportError:
-    from Modules.Classes.Message import SpyMessage, ExpoMessage
+    from Modules.Classes.Message import SpyMessage, ExpoMessage, CombatReport
 try:  # Mission
     from .Mission import Mission
 except ModuleNotFoundError:
@@ -75,10 +75,10 @@ class Account:
         self.build_token = None
         self.session = requests.Session()
         self.session.proxies.update({'https': proxy})
-        self.server_id = None
+        # self.server_id = None <- that´s the userID
         self.server_number = None
         self.server_language = None
-        self.server_name = ""
+        self.server_name = None
         self.server_settings = {}
         self.planets = []
         self.moons = []
@@ -101,6 +101,7 @@ class Account:
         self.session.headers.update(user_agent)
 
         self.login()
+        self.player_id = self.get_player_id()
 
     def login(self):
         self.planets = []  # planets get appended to the list
@@ -306,7 +307,28 @@ class Account:
             if msg["data-msg-id"] not in self.spy_messages:
                 self.spy_messages[msg["data-msg-id"]] = SpyMessage(self, msg)
 
+    def get_cr_messages(self, tab=21):
+        response = self.session.get(f'{self.get_http_string()}page=messages&tab={tab}&ajax=1').text
+        soup = BeautifulSoup(response, features="html.parser")
+        page_count = int(soup.find("li", {"class": "curPage"}).text.split("/")[1])
+
+        for page in range(page_count):
+            page += 1
+            form_data = {
+                "messageId": -1,
+                "tabid": tab,
+                "action": 107,
+                "pagination": page,
+                "ajax": 1
+            }
+            response = self.session.post(f'{self.get_http_string()}page=messages', data=form_data).text
+            soup = BeautifulSoup(response, features="html.parser")
+            for msg in soup.findAll("li", {"class": 'msg'}):
+                #if msg["data-msg-id"] not in self.expo_messages:
+                self.expo_messages[msg["data-msg-id"]] = CombatReport(self, msg)
+
     def get_expo_messages(self, tab=22):
+        messages = []
         print('read expo messages from account')
         """
         read messages from spy-inbox.
@@ -333,8 +355,9 @@ class Account:
             soup = BeautifulSoup(response, features="html.parser")
             for msg in soup.findAll("li", {"class": 'msg'}):
                 if msg["data-msg-id"] not in self.expo_messages:
-                    self.expo_messages[msg["data-msg-id"]] = ExpoMessage(self, msg)
+                    self.expo_messages[msg["data-msg-id"]] = messages.append(ExpoMessage(self, msg))
 
+        return messages
         print('All expo messages pushed into database')
 
     def chk_get_attacked(self):
@@ -415,6 +438,16 @@ class Account:
             return False
         else:
             return True
+
+    def get_player_id(self):
+        soup = BeautifulSoup(self.session.get(f'{self.get_http_string()}page=ingame&component=overview').text, 'html.parser')
+
+        for info in soup.find_all("meta"):
+            if info.get("name", None) == 'ogame-player-id':
+                return info.get("content", None)
+
+    def get_http_string(self):
+        return f"https://s{self.server_number}-{self.server_language}.ogame.gameforge.com/game/index.php?"
 
 
 class AccountFunctions:
@@ -585,6 +618,9 @@ class AccountFunctions:
         with open(path.abspath("../Config/Expeditions_Config.json"), encoding="utf-8") as f:
             d = json.load(f)
         return d[uni]
+
+
+
 
 
 if __name__ == "__main__":

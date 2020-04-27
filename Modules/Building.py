@@ -5,7 +5,6 @@ from concurrent.futures import ThreadPoolExecutor
 
 from Modules.Classes.Account import Account
 
-
 def build_next(planet):
     metall = planet.buildings["Metallmine"]
     kristall = planet.buildings["Kristallmine"]

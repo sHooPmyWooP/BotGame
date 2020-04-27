@@ -44,7 +44,7 @@ class expo_messages:
         "delayed_return": ["verzögerte", "verspätung", "patzer des navigators",
                            "länger dauern als ursprünglich gedacht"],
         "faster_return": ["rückkopplung in den energiespulen", "deine expedition kehrt nun etwas früher", "Rückflug zu verkürzen"],
-        "fleet_loss": ["flotte endgültig verloren", "öffnenden schwarzen Lochs", "Zzzrrt Oh Gott! Krrrzzzzt", "gesamte Expedition vernichtete"],
+        "fleet_loss": ["flotte endgültig verloren", "öffnenden schwarzen Lochs", "Zzzrrt Oh Gott! Krrrzzzzt", "die gesamte Expedition vernichtete"],
         "merchant" : ["Repräsentanten mit Tauschwaren"],
         "ships": ["schlossen sich der flotte an"],
         "item": ["unbemannten flieger", "wertvolles Artefakt", "gegenstand hinterlassen"]
