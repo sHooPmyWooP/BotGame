@@ -43,9 +43,8 @@ class expo_messages:
                     "uraltes Strategiespiel"],
         "delayed_return": ["verzögerte", "verspätung", "patzer des navigators",
                            "länger dauern als ursprünglich gedacht"],
-        "faster_return": ["rückkopplung in den energiespulen", "deine expedition kehrt nun etwas früher", "Rückflug zu verkürzen"],
-        "fleet_loss": ["flotte endgültig verloren", "öffnenden schwarzen Lochs", "Zzzrrt Oh Gott! Krrrzzzzt", "die gesamte Expedition vernichtete"],
-        "merchant" : ["Repräsentanten mit Tauschwaren"],
+        "faster_return": ["rückkopplung in den energiespulen", "deine expedition kehrt nun etwas früher"],
+        "fleet_loss": ["flotte endgültig verloren"],
         "ships": ["schlossen sich der flotte an"],
         "item": ["unbemannten flieger", "wertvolles Artefakt", "gegenstand hinterlassen"]
     }
@@ -55,3 +54,21 @@ class resources:
     metall = "Metall"
     kristall = "Kristall"
     deuterium = "Deuterium"
+
+
+class static_lists:
+    ships = ["Spionagesonde",
+             "Kleiner Transporter",
+             "Großer Transporter",
+             "Recycler",
+             "Kolonieschiff",
+             "Leichter Jäger",
+             "Schwerer Jäger",
+             "Pathfinder",
+             "Kreuzer", "Schlachtschiff",
+             "Schlachtkreuzer",
+             "Bomber",
+             "Zerstörer",
+             "Todesstern"]
+
+    resources = ["Metall", "Kristall", "Deuterium"]

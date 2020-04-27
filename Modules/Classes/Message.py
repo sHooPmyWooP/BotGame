@@ -1,8 +1,6 @@
 import re
 import sqlite3
 import os
-import bs4
-import json
 from datetime import datetime
 
 try:
@@ -28,6 +26,13 @@ class Message:
 
     def delete_message(self):
         """deletes the message from the inbox"""
+
+        if isinstance(self, ExpoMessage):
+            if self.result_type == "unclassified":
+                print(f"Not deleting Message {self.id} because result_type is unclassified. "
+                      f"Please adjust Classification and rerun.")
+                return False
+
         form_data = {
             "messageId": self.id,
             "action": 103,

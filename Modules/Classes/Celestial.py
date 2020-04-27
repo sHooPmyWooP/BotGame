@@ -93,8 +93,9 @@ class Celestial:
         else:
             print("Nothing build - no Plasma yet")
 
-    def send_fleet(self, mission_id, coords, ships, resources=[0, 0, 0], speed=10, holdingtime=0):
+    def send_fleet(self, mission_id, coords, ships, coord_type=1, resources=[0, 0, 0], speed=10, holdingtime=0):
         """
+        :param coord_type: 1 = planet, 2 = expo-debris
         :param mission_id: type of mission
         :param coords: Coordinate()
         :param ships: [[Ship,amount],[Ship,amount]]
@@ -111,11 +112,13 @@ class Celestial:
             ship_type = f'am{ship[0].id}'  # e.g. am201 is the OGame Format
             ship_amount = ship[1]
             form_data.update({ship_type: ship_amount})
+        if not coord_type:
+            type = coords.destination
 
         form_data.update({'galaxy': coords.galaxy,
                           'system': coords.system,
                           'position': coords.position,
-                          'type': coords.destination,
+                          'type': coord_type,
                           'metal': resources[0],
                           'crystal': resources[1],
                           'deuterium': resources[2],
@@ -158,6 +161,8 @@ class Celestial:
                 "error"] == 4032:  # message = 'Kein gültiges Expeditionsziel'
                 print("Kein gültiges Expeditionsziel.")
                 return [False, 5]
+            else:
+                print(response["errors"][0]["error"])
 
 
 class CelestialReader:
@@ -311,8 +316,8 @@ class CelestialReader:
                                                                             construction_finished_in_seconds,
                                                                             self.celestial)
 
-    def read_fleet(self, read_moon=False):
-        id = self.celestial.id if not read_moon else self.celestial.moon.id
+    def read_fleet(self):
+        id = self.celestial.id
         response = self.celestial.acc.session.get('https://s{}-{}.ogame.gameforge.com/game/index.php?page=ingame&'
                                                   'component=shipyard&cp={}'
                                                   .format(self.celestial.acc.server_number,

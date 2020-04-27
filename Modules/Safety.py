@@ -33,7 +33,7 @@ class Safety():
             try:
                 self.acc.login()
                 if self.acc.chk_get_attacked():
-                    self.acc.read_in_all_celestial_basics()
+                    self.acc.init_celestials()
                     self.acc.read_missions()
                     target_coords = []
                     # GETTING THE MISSION

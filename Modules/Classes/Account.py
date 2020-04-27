@@ -6,9 +6,11 @@ import sys
 import traceback
 from os import path
 
-#import pause
+import pause
 import requests
 from bs4 import BeautifulSoup
+
+from Modules.Classes.Marketplace import Marketplace
 
 sys.path.append(
     path.dirname(path.dirname(path.abspath(__file__))))  # necessary to make the file structure work on raspi
@@ -19,12 +21,18 @@ except ModuleNotFoundError:
     from Modules.Classes.Coordinate import Coordinate
 except ImportError:
     from Modules.Classes.Coordinate import Coordinate
-try:  # SpyMessage
-    from .Message import SpyMessage, ExpoMessage, CombatReport
+try:  # Resources
+    from .Resources import Resources
 except ModuleNotFoundError:
-    from Modules.Classes.Message import SpyMessage, ExpoMessage, CombatReport
+    from Modules.Classes.Resources import Resources
 except ImportError:
-    from Modules.Classes.Message import SpyMessage, ExpoMessage, CombatReport
+    from Modules.Classes.Resources import Resources
+try:  # SpyMessage
+    from .Message import SpyMessage, ExpoMessage
+except ModuleNotFoundError:
+    from Modules.Classes.Message import SpyMessage, ExpoMessage
+except ImportError:
+    from Modules.Classes.Message import SpyMessage, ExpoMessage
 try:  # Mission
     from .Mission import Mission
 except ModuleNotFoundError:
@@ -57,9 +65,9 @@ except ImportError:
     from Modules.Classes.CustomExceptions import NoShipsAvailableError
 
 try:
-    from Modules.Resources.Static_Information.Constants import mission_type_ids
+    from Modules.Resources.Static_Information.Constants import mission_type_ids, static_lists
 except ModuleNotFoundError:
-    from Resources.Static_Information.Constants import mission_type_ids
+    from Resources.Static_Information.Constants import mission_type_ids, ship_list
 
 
 class Account:
@@ -70,6 +78,7 @@ class Account:
         self.username = username
         self.player_name = ''
         self.password = password
+        self.AccountFunctions = AccountFunctions(self)
         self.chat_token = None
         self.sendfleet_token = None
         self.build_token = None
@@ -92,6 +101,7 @@ class Account:
         self.fleet_count = [0, 0]  # current/max
         self.offers_count = [0, 0]  # current/max
         self.missions = []
+        self.marketplace = Marketplace(self)
 
         if user_agent is None:
             user_agent = {
@@ -101,6 +111,7 @@ class Account:
         self.session.headers.update(user_agent)
 
         self.login()
+        self.index_php = f"https://s{self.server_number}-{self.server_language}.ogame.gameforge.com/game/index.php"
         self.player_id = self.get_player_id()
 
     def login(self):
@@ -207,14 +218,24 @@ class Account:
                     pass
 
     def read_in_all_celestials(self, planets=True):
-        ids = self.get_planet_ids() if planets else self.get_moon_ids()
+        """
+        Read in all information for all celestials. If moons are included depends on parameter planets
+        :param planets: Boolean - True if only planets should be read, includes moons otherwise
+        :return:
+        """
+        ids = self.get_planet_ids() if planets else self.get_planet_ids() + self.get_moon_ids()
         for id in ids:
             celestial = Celestial(self, id)
             celestial.reader.read_all()
-            self.planets.append(celestial) if planets else self.moons.append(celestial)
+            self.planets.append(celestial) if not celestial.is_moon else self.moons.append(celestial)
             print(celestial.name + ' with id ' + str(celestial.id) + ' was added')
 
     def read_in_celestial(self, id):
+        """
+        Reads in a specific celestial which is identified by OGame internal ID
+        :param id: int  - can be taken from html address in the format cp=12345678
+        :return: Celestial
+        """
         celestial = Celestial(self, id)
         celestial.reader.read_all()
         if not celestial.is_moon:
@@ -225,6 +246,10 @@ class Account:
         return celestial
 
     def get_planet_ids(self):
+        """
+        Get all IDs of Planets
+        :return: int[ ]
+        """
         planet_ids = []
         marker_string = 'id="planet-'
         for planet_id in re.finditer(marker_string, self.session.content):
@@ -234,6 +259,10 @@ class Account:
         return planet_ids
 
     def get_moon_ids(self):
+        """
+        Get all IDs of Moons
+        :return: int[ ]
+        """
         moon_ids = []
         soup = BeautifulSoup(self.session.content, features="html.parser")
         moon_elements = soup.find_all("a", {"class": "moonlink"})
@@ -245,7 +274,8 @@ class Account:
 
     def init_celestials(self):
         """
-        Initiates the celestials with base information like id, coords and such
+        Initiates the celestials with base information ID, is_moon, coordinate, name, fields,
+        temperature (planet only)
         """
         for id in self.get_planet_ids() + self.get_moon_ids():
             for celestial in self.planets + self.moons:
@@ -257,18 +287,18 @@ class Account:
                 self.planets.append(celestial) if not celestial.is_moon else self.moons.append(celestial)
 
     def get_celestial_by_coord(self, coord):
+        """
+        :param coord: Coordinate
+        :return: Celestial
+        """
         for celestial in self.moons + self.planets:
             if celestial.coordinates.get_coord_str() == coord.get_coord_str():
                 return celestial
 
-    def read_in_all_celestial_basics(self):
-        ids = self.get_planet_ids() + self.get_moon_ids()
-        for id in ids:
-            celestial = Celestial(self, id)
-            celestial.reader.read_base_infos()
-            self.planets.append(celestial) if not celestial.is_moon else self.moons.append(celestial)
-
     def read_in_all_fleets(self):
+        """
+        Populate Ships{} for all Celestials
+        """
         for planet in self.planets:
             planet.reader.read_fleet()
         for moon in self.moons:
@@ -424,8 +454,33 @@ class Account:
                     "]", "").split(":")
                 coords_to = Coordinate(coords_to_list[0], coords_to_list[1], coords_to_list[2], 2 if to_moon else 1)
                 hostile = True if event.find("td", {"class": "countDown"}).find("span", {"class": "hostile"}) else False
+
+                details = BeautifulSoup(event.find("span", {"class": "tooltipRight"}).attrs["title"],
+                                        features="html.parser")
+                details_rows = details.find_all("td")
+                ships = []
+                resources = Resources()
+
+                details_rows_clean = [row for row in details_rows if row.text != ' ']
+
+                # RESOURCES
+                for i in range(0, int(len(details_rows_clean)), 2):
+                    text = details_rows_clean[i].text.replace(":", "")
+                    value = details_rows_clean[i + 1].text.replace(".", "")
+                    if text in static_lists.ships:
+                        ships.append([text, int(value)])
+                    elif text in static_lists.resources:
+                        if text == "Metall":
+                            text = "metal"
+                        elif text == "Kristall":
+                            text = "crystal"
+                        else:
+                            text = "deuterium"
+                        resources.set_value(int(value), text)
+
                 self.missions.append(
-                    Mission(id, mission_type, return_flight, hostile, coords_from, coords_to, arrival_time))
+                    Mission(id, mission_type, return_flight, hostile, coords_from, coords_to, arrival_time, resources,
+                            ships))
 
     def chk_logged_in(self):
         """
@@ -454,7 +509,7 @@ class AccountFunctions:
 
     def __init__(self, acc):
         self.acc = acc
-        self.config = self.get_expeditions_config(self.acc.universe)
+        self.config = self.get_expeditions_config(acc.universe)
         self.possible_fleets, self.possible_expos, self.max_wait_time, self.time_between_expos, self.max_expo_slots = 0, 0, 0, 0, 0
         self.fleet_started, self.expo_user_defined_planet = False, False
         self.expo_user_defined_planet_coordinates = ""
@@ -538,7 +593,7 @@ class AccountFunctions:
             coord_obj = Coordinate(coord[0], coord[1], coord[2], coord[3])
             celestial = self.acc.get_celestial_by_coord(coord_obj)
             celestials = [celestial]
-            self.acc.read_in_fleet_by_id(celestial.id)
+            celestial.reader.read_in_fleet_by_id()
         else:
             # If not user_defined_planet get celestial with max struct points (determined by settings)
             self.acc.read_in_all_fleets()
@@ -619,19 +674,125 @@ class AccountFunctions:
             d = json.load(f)
         return d[uni]
 
+    def chk_for_expo_debris(self):
+        """
+        Check if in any system where own celestials are initialized has debris on position 16
+        :return: Coordinate[ ]
+        """
+        if not self.acc.planets or not self.acc.moons:
+            print("Read in Celestials beforehand! Coords needed to identify relevant systems")
+            quit()
+        expo_debris = []
+        systems = []
+        for planet in self.acc.planets:
+            systems.append(str(planet.coordinates.galaxy) + ":" + str(planet.coordinates.system))
+        systems_expo_unique = [Coordinate(coord.split(":")[0],
+                                          coord.split(":")[1], 16) for coord in set(systems)]
+        for coord in systems_expo_unique:
+            debris = self.get_debris_for_galaxy_system(coord.galaxy, coord.system)
+            for debris_coord in debris:
+                if debris_coord[0].position == 16:
+                    expo_debris.append(debris_coord)
+        return expo_debris
+
+    def get_debris_for_galaxy_system(self, galaxy, system):
+        """
+        Get list of Debris in System
+        :param galaxy: int
+        :param system: int
+        :return: Debris_in_System[[Coordinate, Resources, int Recyclers/Pathfinders], ]
+        """
+        form_data = {'galaxy': galaxy,
+                     'system': system}
+        response = self.acc.session.post(
+            f'https://s{self.acc.server_number}-{self.acc.server_language}.ogame.gameforge.com/game/index.php?page=ingame&component=galaxyContent&ajax=1',
+            headers={'X-Requested-With': 'XMLHttpRequest'}, data=form_data).json()
+        soup = BeautifulSoup(response["galaxy"], features="html.parser")
+        debris_raw = [debris.text.strip() for debris in soup.find_all("tr", {"class": "expeditionDebrisSlot"}) if
+                      debris.text.strip() != '']
+        debris_raw += [debris.text.strip() for debris in soup.find_all("td", {"class": "debris"}) if
+                       debris.text.strip() != '']
+        debris_list = []
+        if debris_raw:
+            for debris in debris_raw:
+                # Coordinates
+                coord_raw = re.search("\[\d+:\d+:\d+\]", debris).group(0)
+                coord_cleaned = coord_raw.replace("[", "").replace("]", "").split(":")
+                coord = Coordinate(coord_cleaned[0], coord_cleaned[1], coord_cleaned[2], 3)
+                # Resources
+                debris_metal = re.search("\d+", debris.replace(".", "").split("Metall")[1]).group(0)
+                debris_crystal = re.search("\d+", debris.replace(".", "").split("Kristall")[1]).group(0)
+                resources = Resources(debris_metal, debris_crystal, 0)
+                # Needed Ships to Recycle
+                # todo: Adjust to match delimiter 1.000 etc.
+                ships_raw = re.search("Benötigte.*: \d+", debris).group(0).replace(".", "")
+
+                ships = int(re.search("\d+", ships_raw).group(0))
+
+                debris_list.append([coord, resources, ships])
+        return debris_list
+
+    def recycle_expo_debris(self, radius=20, pf_threshold=10):
+        expo_debris = self.chk_for_expo_debris()
+        if not expo_debris:
+            print("No Expo debris currently in range")
+            return False
+
+        for coord in expo_debris:
+            pf_needed = coord[2]
+            while pf_needed >= pf_threshold:
+                # Check if debris is already handled
+                self.acc.read_missions()
+                pf_on_the_way = 0
+                for mission in self.acc.missions:
+                    if mission.coord_to.get_coord_str() == coord[0].get_coord_str():
+                        if mission.mission_type == mission_type_ids.recycle:
+                            for ship in mission.ships:
+                                if ship[0] == "Pathfinder":
+                                    pf_on_the_way += ship[1]
+
+                if pf_needed <= pf_on_the_way:
+                    break
+                else:
+                    pf_needed -= pf_on_the_way
+
+                # Get Celestial to send PF from
+                celestials = self.acc.moons + self.acc.planets
+                celestials = coord[0].get_own_celestials_in_range(celestials, radius)
+                celestials_rel_distance = []
+                for celestial in celestials:
+                    celestials_rel_distance.append(
+                        [celestial, coord[0].calculate_relative_distance(celestial.coordinates)])
+                celestials_sorted_by_distance = sorted(celestials_rel_distance, key=lambda x: (x[1], x[1]),
+                                                       reverse=False)
+
+                for celestial in celestials_sorted_by_distance:
+                    celestial = celestial[0]
+                    celestial.reader.read_fleet()
+                    pf = celestial.ships["Pathfinder"]
+                    if pf.count >= pf_needed:
+                        #  Send Fleet
+                        celestial.send_fleet(mission_type_ids.recycle, coord[0], [[pf, pf_needed]], 2,
+                                             resources=[0, 0, 0],
+                                             speed=10, holdingtime=0)
+                        break
+        print("Done")
+
 
 
 
 
 if __name__ == "__main__":
     a1 = Account(universe="Pasiphae", username="strabbit@web.de", password="OGame!4myself")
-    functions = AccountFunctions(a1)
-    functions.start_expeditions_loop()
+    a1.init_celestials()
+    a1.AccountFunctions.recycle_expo_debris()
 
-    #
+    # #
     # a1.get_expo_messages()
-    # """
+    # # # """
     # for message in a1.expo_messages:
     #     a1.expo_messages[message].delete_message()
-    # """
-    # print("Done...")
+    # # # """
+    # a1.marketplace.get_offers_by_action("buying")
+
+    print("Done...")
